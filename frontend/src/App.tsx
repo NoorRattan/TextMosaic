@@ -30,6 +30,7 @@ export default function App() {
   const [selectedTier, setSelectedTier] = useState<TierName>("balanced");
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTierLoading, setIsTierLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [signal, setSignal] = useState({ x: 50, y: 45 });
   const cursorX = useMotionValue(-80);
@@ -74,6 +75,9 @@ export default function App() {
             ? reason.message
             : "Unable to load model tiers.",
         );
+      })
+      .finally(() => {
+        setIsTierLoading(false);
       });
   }, []);
 
@@ -228,7 +232,7 @@ export default function App() {
             <TierSelector
               tiers={tiers}
               selectedTier={selectedTier}
-              disabled={isLoading || tiers.length === 0}
+              disabled={isLoading || isTierLoading || tiers.length === 0}
               onChange={setSelectedTier}
             />
             {error ? (

@@ -9,6 +9,8 @@ Prerequisites: Python 3.11 or newer, Node.js 24 or newer, and Docker Desktop for
 ```powershell
 Copy-Item .env.example .env
 # Optionally set TEXTMOSAIC_DATA_DIR in .env to an external writable location.
+Copy-Item frontend\.env.example frontend\.env.local
+# Set VITE_API_BASE_URL in frontend\.env.local when the API is hosted elsewhere.
 
 py -3.12 -m venv .venv
 .\.venv\Scripts\python -m pip install --requirement backend\requirements-lock.txt
@@ -33,6 +35,8 @@ docker compose up --build
 ```
 
 Open `http://localhost:5173`. The frontend calls `http://localhost:7860`; the backend health endpoint is `http://localhost:7860/health`.
+
+For a deployed frontend, set `VITE_API_BASE_URL` at build time to the public FastAPI URL and add the exact frontend origin to the backend's `ALLOWED_ORIGINS` allow-list. The value is public configuration, not a secret.
 
 ## API
 

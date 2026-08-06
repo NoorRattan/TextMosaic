@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      ALLOWED_ORIGINS: http://localhost:5173
+      ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       PORT: "7860"
     ports:
       - "7860:7860"

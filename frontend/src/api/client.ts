@@ -8,7 +8,9 @@ import type {
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ??
-  "http://localhost:7860";
+  "http://127.0.0.1:7860";
+const REQUEST_TIMEOUT_MS = 20_000;
+const TIER_RETRY_DELAYS_MS = [300, 900] as const;
 
 interface ApiExtractResponse {
   tokens: string[];
@@ -35,10 +37,26 @@ function toClientResponse(response: ApiExtractResponse): ExtractResponse {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    ...init,
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  );
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      headers: { "Content-Type": "application/json", ...init?.headers },
+      signal: controller.signal,
+      ...init,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("The extraction service did not respond in time.");
+    }
+    throw new Error("Unable to reach the extraction service.");
+  } finally {
+    window.clearTimeout(timeout);
+  }
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ApiErrorResponse;
     throw new Error(
@@ -49,7 +67,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function getTiers(): Promise<TierInfo[]> {
-  return (await request<ApiTierResponse>("/tiers")).tiers;
+  let lastError: Error | undefined;
+  for (const delay of [...TIER_RETRY_DELAYS_MS, 0]) {
+    if (delay > 0) {
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+    }
+    try {
+      return (await request<ApiTierResponse>("/tiers")).tiers;
+    } catch (error) {
+      lastError =
+        error instanceof Error
+          ? error
+          : new Error("Unable to load model tiers.");
+    }
+  }
+  throw lastError ?? new Error("Unable to load model tiers.");
 }
 
 export async function extractText(
