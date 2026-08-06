@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Final
 
-
 # These IDs are a local batching convention, not a requirement imposed by File 00.
 PAD_TOKEN: Final[str] = "<PAD>"
 UNK_TOKEN: Final[str] = "<UNK>"

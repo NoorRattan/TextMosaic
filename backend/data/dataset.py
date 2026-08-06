@@ -10,7 +10,6 @@ from torch.utils.data import Dataset
 
 from backend.data.vocab import UNK_TOKEN
 
-
 EntityType: TypeAlias = Literal["Peop", "Org", "Loc", "Other"]
 RelationLabel: TypeAlias = Literal[
     "Located_In",
@@ -32,9 +31,7 @@ BIO_TAGS: Final[tuple[str, ...]] = (
     "I-Other",
     "O",
 )
-BIO_TAG_TO_ID: Final[dict[str, int]] = {
-    tag: index for index, tag in enumerate(BIO_TAGS)
-}
+BIO_TAG_TO_ID: Final[dict[str, int]] = {tag: index for index, tag in enumerate(BIO_TAGS)}
 RELATION_LABELS: Final[tuple[RelationLabel, ...]] = (
     "Located_In",
     "Work_For",
@@ -43,9 +40,7 @@ RELATION_LABELS: Final[tuple[RelationLabel, ...]] = (
     "Kill",
     "no_relation",
 )
-RELATION_TO_ID: Final[dict[RelationLabel, int]] = {
-    label: index for index, label in enumerate(RELATION_LABELS)
-}
+RELATION_TO_ID: Final[dict[RelationLabel, int]] = {label: index for index, label in enumerate(RELATION_LABELS)}
 
 
 class RecordCollection(Protocol):
@@ -125,17 +120,14 @@ def encode_bio_tags(tokens: Sequence[str], entities: Sequence[EntitySpan]) -> tu
         for token_index in range(entity.start, entity.end):
             if tags[token_index] != "O":
                 raise ValueError(
-                    "CoNLL04 entity spans must not overlap; "
-                    f"entity {entity_index} collides at token {token_index}."
+                    f"CoNLL04 entity spans must not overlap; entity {entity_index} collides at token {token_index}."
                 )
             prefix = "B" if token_index == entity.start else "I"
             tags[token_index] = f"{prefix}-{entity.type}"
     return tuple(tags)
 
 
-def build_gold_entity_pairs(
-    entities: Sequence[EntitySpan], relations: Sequence[object]
-) -> tuple[GoldEntityPair, ...]:
+def build_gold_entity_pairs(entities: Sequence[EntitySpan], relations: Sequence[object]) -> tuple[GoldEntityPair, ...]:
     """Enumerate directed non-self gold pairs and label missing edges no_relation."""
     labels_by_pair: dict[tuple[int, int], RelationLabel] = {}
     for relation_index, relation in enumerate(relations):
@@ -199,8 +191,7 @@ class CoNLL04Dataset(Dataset[SentenceSample]):
 
         raw_entities = _require_sequence(record.get("entities"), "entities")
         entities = tuple(
-            _parse_entity(entity, len(tokens), entity_index)
-            for entity_index, entity in enumerate(raw_entities)
+            _parse_entity(entity, len(tokens), entity_index) for entity_index, entity in enumerate(raw_entities)
         )
         bio_tags = encode_bio_tags(tokens, entities)
 
@@ -209,9 +200,7 @@ class CoNLL04Dataset(Dataset[SentenceSample]):
 
         return SentenceSample(
             tokens=tokens,
-            token_ids=tuple(
-                self._vocabulary.get(token, self._unknown_token_id) for token in tokens
-            ),
+            token_ids=tuple(self._vocabulary.get(token, self._unknown_token_id) for token in tokens),
             bio_tags=bio_tags,
             bio_tag_ids=tuple(BIO_TAG_TO_ID[tag] for tag in bio_tags),
             entities=entities,
