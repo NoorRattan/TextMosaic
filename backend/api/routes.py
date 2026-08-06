@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import time
 from collections import defaultdict, deque
 from pathlib import Path
@@ -18,11 +17,11 @@ from backend.api.schemas import (
     TierInfo,
     TierResponse,
 )
+from backend.config import MODEL_TIER_DEFAULT as _DEFAULT_TIER_VALUE
 from backend.model.inference import CheckpointError, InferenceEngine
 from backend.model.tiers import TIER_CONFIGS, TierName
 
 _VALID_TIERS: Final[set[str]] = set(TIER_CONFIGS)
-_DEFAULT_TIER_VALUE: Final[str] = os.getenv("MODEL_TIER_DEFAULT", "balanced")
 if _DEFAULT_TIER_VALUE not in _VALID_TIERS:
     raise ValueError("MODEL_TIER_DEFAULT must be speed, balanced, or accuracy.")
 MODEL_TIER_DEFAULT: Final[TierName] = cast(TierName, _DEFAULT_TIER_VALUE)

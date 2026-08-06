@@ -36,7 +36,7 @@ Open `http://localhost:5173`. The frontend calls `http://localhost:7860`; the ba
 
 ## API
 
-`POST /extract` accepts text and an optional tier. `GET /tiers` reads the available tiers from the backend configuration, and `GET /health` is a minimal readiness endpoint.
+`POST /extract` accepts text and an optional tier. `GET /tiers` reads the available tiers from the backend configuration, and `GET /health` is a minimal liveness endpoint.
 
 ```json
 {"text":"Ada joined Acme.","tier":"balanced"}

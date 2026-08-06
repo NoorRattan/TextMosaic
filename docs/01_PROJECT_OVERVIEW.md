@@ -23,7 +23,7 @@ judgeable, so they're built first regardless of how much time is left.
 ## Tech Stack + Justification
 | Layer | Choice | Why |
 |---|---|---|
-| Backend | Python 3.11+, FastAPI, Uvicorn | Modern, typed, auto-generates interactive API docs |
+| Backend | Python 3.11+, FastAPI, Uvicorn | Modern, typed JSON API; interactive API documentation is intentionally disabled in the deployed app |
 | ML | PyTorch, self-trained BiLSTM + two heads | No pretrained weights — see File 00 Head Architecture |
 | Data | HF `datasets` lib, CoNLL04 only | A data source, not a model — doesn't compromise Priority 1 |
 | Frontend | React + Vite, TypeScript strict | Fast dev loop, strong typing catches schema drift early |

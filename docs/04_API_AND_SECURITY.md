@@ -20,8 +20,9 @@ what `TierSelector.tsx` populates itself from, so the tier list only ever exists
 ```
 
 ### `GET /health`
-`{"status": "ok"}` — used for container readiness checks; also just good practice regardless of
-host.
+`{"status": "ok"}` — a lightweight process-liveness check. It intentionally does not eagerly
+load all model checkpoints, so a deployment should also exercise `POST /extract` before it is
+considered model-ready.
 - **Test coverage:** returns 200 with the expected body.
 
 ## Error format
@@ -39,9 +40,9 @@ gets added to `ALLOWED_ORIGINS` once the frontend is actually deployed, and this
 at that point.
 
 ## Rate limiting
-A simple in-memory limiter (e.g. `slowapi`) on `POST /extract` — this is a personal/portfolio-scale
-deployment, not a service under real load, so anything heavier is effort spent in the wrong place
-given all five Portfolio Priorities are already HIGH elsewhere.
+A custom in-memory fixed-window limiter on `POST /extract` (30 requests per direct client address
+per 60 seconds). It intentionally does not trust forwarded-IP headers; deploy a proxy-aware limiter
+if the app later sits behind a trusted reverse proxy or serves real public traffic.
 
 ## CSP / security headers
 This is a JSON API, not an HTML-serving app, so a full Content-Security-Policy is mostly moot —

@@ -1,7 +1,7 @@
 """Centralized environment configuration for TextMosaic.
 
 This module is the only place the current backend reads TEXTMOSAIC_DATA_DIR,
-ALLOWED_ORIGINS, and PORT from the environment.  It also loads an optional
+ALLOWED_ORIGINS, PORT, and MODEL_TIER_DEFAULT from the environment. It also loads an optional
 repository-root .env file with the standard library so a local override works
 without adding a configuration dependency.
 """
@@ -45,6 +45,7 @@ _load_dotenv(_PROJECT_ROOT / ".env")
 
 TEXTMOSAIC_DATA_DIR: Final[str] = os.getenv("TEXTMOSAIC_DATA_DIR", "./data")
 ALLOWED_ORIGINS: Final[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+MODEL_TIER_DEFAULT: Final[str] = os.getenv("MODEL_TIER_DEFAULT", "balanced")
 
 try:
     PORT: Final[int] = int(os.getenv("PORT", "7860"))

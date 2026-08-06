@@ -4,6 +4,7 @@
 textmosaic/                          (clones to N:\Github-Repo\textmosaic locally)
 ├── .env.example
 ├── .gitignore
+├── BUILD_PROGRESS.md
 ├── pyproject.toml
 ├── docker-compose.yml
 ├── README.md
@@ -20,7 +21,7 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 │   ├── requirements.txt
 │   ├── requirements-lock.txt
 │   ├── main.py                       # FastAPI app entrypoint, mounts routes, CORS middleware
-│   ├── config.py                     # reads env vars: TEXTMOSAIC_DATA_DIR, ALLOWED_ORIGINS, PORT
+│   ├── config.py                     # reads env vars: TEXTMOSAIC_DATA_DIR, ALLOWED_ORIGINS, PORT, MODEL_TIER_DEFAULT
 │   ├── checkpoints/                  # baked into image at build time — see warning below
 │   │   ├── speed.pt
 │   │   ├── balanced.pt
@@ -34,7 +35,7 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 │   │   ├── __init__.py
 │   │   ├── architecture.py           # JointNERRE nn.Module — shared BiLSTM, NER head, RE head
 │   │   ├── tiers.py                  # the 3-tier config table from File 00, as code — single source, not re-typed elsewhere
-│   │   ├── train.py                  # training loop; loss = loss_ner + loss_re; writes checkpoints to TEXTMOSAIC_DATA_DIR during training, then copied into backend/checkpoints/ for the Docker build
+│   │   ├── train.py                  # training loop; loss = loss_ner + loss_re; writes selected checkpoints directly to backend/checkpoints/ by default
 │   │   ├── inference.py              # loads a tier's .pt, runs NER decode, builds RE candidate pairs from predicted spans, classifies
 │   │   └── decoding.py               # deterministic local tokenizer + shared BIO decoder
 │   ├── api/
@@ -46,7 +47,9 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 │       ├── test_training_updates.py  # Minimum Testing Floor: asserts relation-F1 improves over >=2 epochs
 │       └── test_api.py               # /extract, /health, /tiers smoke tests
 └── frontend/
+    ├── package-lock.json
     ├── package.json
+    ├── tsconfig.json
     ├── vite.config.ts
     ├── index.html
     ├── Dockerfile                    # local-dev parity only; production build is static, served by Cloudflare Pages
@@ -54,12 +57,13 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
         ├── main.tsx
         ├── App.tsx
         ├── api/client.ts             # fetch wrapper; see File 03 for the (currently trivial) snake_case->camelCase mapping
+        ├── api/client.test.ts        # fetch-boundary conversion coverage
         ├── types.ts                  # frontend-only camelCase TypeScript interfaces
         ├── components/
         │   ├── TextInput.tsx
         │   ├── TierSelector.tsx      # populated from GET /tiers, not a hardcoded second copy of the tier list
         │   └── GraphView.tsx         # react-force-graph-3d wrapper
-        └── styles/theme.ts           # the four hex codes from File 00 — imported, never re-typed
+        └── styles/theme.css          # the four hex codes from File 00, applied globally
 ```
 
 ## Key Decisions
@@ -88,8 +92,9 @@ runs (Session 1), which is the verified source of truth, not this document.
 **Backend (`requirements.txt`):** `torch>=2.9`, `fastapi>=0.115`, `uvicorn>=0.30`, `datasets>=3.0`,
 `pydantic>=2.8`, `pytest>=8.0`
 
-**Frontend (`package.json`):** `react>=18`, `vite>=5`, `typescript>=5.5`, `react-force-graph-3d`
-(latest at install time), `three` (peer dependency of `react-force-graph-3d`)
+**Frontend (`package.json`):** `react^19.2.8`, `vite^8.2.1`, `typescript^7.0.2`,
+`react-force-graph-3d^1.29.1`, and `three^0.185.1`. Exact resolved transitive versions are in
+`frontend/package-lock.json`.
 
 ## Environment Variables
 | Var | Where used | Default | Notes |
@@ -97,4 +102,4 @@ runs (Session 1), which is the verified source of truth, not this document.
 | `TEXTMOSAIC_DATA_DIR` | `conll04_loader.py`, `train.py` | `./data` | Your local override goes in `.env`: `N:\training data` |
 | `ALLOWED_ORIGINS` | `main.py` CORS middleware | `http://localhost:5173,http://127.0.0.1:5173` | Explicit local-dev allow-list. Add the real Cloudflare Pages domain once it exists — **UNVERIFIED / TBD until frontend is deployed**, not invented here |
 | `PORT` | `Dockerfile` CMD, `uvicorn` | `7860` | Locked — HF Spaces Docker SDK requirement |
-| `MODEL_TIER_DEFAULT` | `routes.py` | `balanced` | Used when a request omits `tier` |
+| `MODEL_TIER_DEFAULT` | `config.py`, `routes.py` | `balanced` | Loaded from `.env` before route configuration; used when a request omits `tier` |
