@@ -32,8 +32,8 @@ host.
 - 500 — unexpected inference errors (logged server-side, generic message returned to the client)
 
 ## CORS
-`ALLOWED_ORIGINS` env var (File 02), explicit allow-list — never `*`. Must include
-`http://localhost:5173` (Vite dev default) for local development. The real Cloudflare Pages
+`ALLOWED_ORIGINS` env var (File 02), explicit allow-list — never `*`. The local default includes
+`http://localhost:5173` (Vite dev default) and `http://127.0.0.1:5173` for loopback parity. The real Cloudflare Pages
 production domain is **UNVERIFIED / TBD** — it doesn't exist yet, so it isn't guessed at here; it
 gets added to `ALLOWED_ORIGINS` once the frontend is actually deployed, and this file gets updated
 at that point.

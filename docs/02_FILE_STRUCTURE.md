@@ -4,6 +4,7 @@
 textmosaic/                          (clones to N:\Github-Repo\textmosaic locally)
 ├── .env.example
 ├── .gitignore
+├── pyproject.toml
 ├── docker-compose.yml
 ├── README.md
 ├── docs/
@@ -17,6 +18,7 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt
+│   ├── requirements-lock.txt
 │   ├── main.py                       # FastAPI app entrypoint, mounts routes, CORS middleware
 │   ├── config.py                     # reads env vars: TEXTMOSAIC_DATA_DIR, ALLOWED_ORIGINS, PORT
 │   ├── checkpoints/                  # baked into image at build time — see warning below
@@ -33,7 +35,8 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 │   │   ├── architecture.py           # JointNERRE nn.Module — shared BiLSTM, NER head, RE head
 │   │   ├── tiers.py                  # the 3-tier config table from File 00, as code — single source, not re-typed elsewhere
 │   │   ├── train.py                  # training loop; loss = loss_ner + loss_re; writes checkpoints to TEXTMOSAIC_DATA_DIR during training, then copied into backend/checkpoints/ for the Docker build
-│   │   └── inference.py              # loads a tier's .pt, runs NER decode, builds RE candidate pairs from predicted spans, classifies
+│   │   ├── inference.py              # loads a tier's .pt, runs NER decode, builds RE candidate pairs from predicted spans, classifies
+│   │   └── decoding.py               # deterministic local tokenizer + shared BIO decoder
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── routes.py                 # POST /extract, GET /health, GET /tiers
@@ -51,6 +54,7 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
         ├── main.tsx
         ├── App.tsx
         ├── api/client.ts             # fetch wrapper; see File 03 for the (currently trivial) snake_case->camelCase mapping
+        ├── types.ts                  # frontend-only camelCase TypeScript interfaces
         ├── components/
         │   ├── TextInput.tsx
         │   ├── TierSelector.tsx      # populated from GET /tiers, not a hardcoded second copy of the tier list
@@ -91,6 +95,6 @@ runs (Session 1), which is the verified source of truth, not this document.
 | Var | Where used | Default | Notes |
 |---|---|---|---|
 | `TEXTMOSAIC_DATA_DIR` | `conll04_loader.py`, `train.py` | `./data` | Your local override goes in `.env`: `N:\training data` |
-| `ALLOWED_ORIGINS` | `main.py` CORS middleware | `http://localhost:5173` | Add the real Cloudflare Pages domain once it exists — **UNVERIFIED / TBD until frontend is deployed**, not invented here |
+| `ALLOWED_ORIGINS` | `main.py` CORS middleware | `http://localhost:5173,http://127.0.0.1:5173` | Explicit local-dev allow-list. Add the real Cloudflare Pages domain once it exists — **UNVERIFIED / TBD until frontend is deployed**, not invented here |
 | `PORT` | `Dockerfile` CMD, `uvicorn` | `7860` | Locked — HF Spaces Docker SDK requirement |
 | `MODEL_TIER_DEFAULT` | `routes.py` | `balanced` | Used when a request omits `tier` |

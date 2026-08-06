@@ -6,9 +6,11 @@ persistence (e.g. saving past extractions), this file needs a real revision befo
 written, not after.
 
 ## Source schema: CoNLL04 (`DFKI-SLT/conll04` on HF Datasets)
-This is the actual shape of the training data, verified directly from the dataset card — not
-invented. Field names below (`tokens`, `entities`, `type`, `start`, `end`, `relations`, `head`,
-`tail`) are the exact strings used throughout this project's API, per File 00's naming convention.
+This is the actual shape of the training data, verified directly from the dataset card and live
+download — not invented. Field names below (`tokens`, `entities`, `type`, `start`, `end`,
+`relations`, `head`, `tail`) are the exact strings used throughout this project's API, per File
+00's naming convention. Source records also include `orig_id`; it is dataset provenance only and
+is intentionally not exposed by the extraction API.
 
 Real example record from the dataset:
 ```json

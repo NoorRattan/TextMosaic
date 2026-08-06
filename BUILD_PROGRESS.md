@@ -1,35 +1,34 @@
 # BUILD PROGRESS — TextMosaic
 
-## Status: Session 1 complete — data pipeline and dependency environment verified
+## Status: Local project build complete — ready for repository publishing and deployment configuration
 
-## Sessions completed: 1
+## Sessions completed: 5
 
 ## Planned vs. actual
 | Stage | Planned | Actual | Status |
 |---|---|---|---|
-| Data pipeline (loader, vocab, Dataset) | Session 1 | Config, CoNLL04 loader, training-only vocabulary, BIO/pair Dataset, environment example, ignore rules, and resolved dependency lock | Complete |
-| NER head training | Session 2 | — | Not started |
-| RE head + joint loss | Session 3 | — | Not started |
-| FastAPI + Docker | Session 4 | — | Not started |
-| React frontend + deploy | Session 5 | — | Not started |
+| Data pipeline (loader, vocab, Dataset) | Session 1 | Live CoNLL04 loader, train-only vocabulary, BIO validation, and sentence-scoped gold relation candidates | Complete |
+| NER head training | Session 2 | Randomly initialized shared-BiLSTM NER head, deterministic decoding, and initialization coverage | Complete |
+| RE head + joint loss | Session 3 | Directed relation head, complete per-sentence candidate enumeration, class-imbalance handling, and three trained checkpoints | Complete |
+| FastAPI + Docker | Session 4 | Stateless API, CORS, rate limiting, error envelopes, Docker images, compose setup, and backend coverage | Complete locally |
+| React frontend + deploy | Session 5 | Typed Vite UI, lazy 3D graph renderer, frontend coverage, and local browser verification | Complete locally; external deployment pending |
 
 ## Current repo state
-- Approved Files 00–04 are restored under `docs/` unchanged from their supplied copies.
-- `backend/config.py`, `backend/requirements.txt`, and `backend/requirements-lock.txt` are present.
-- `backend/data/` contains `__init__.py`, `conll04_loader.py`, `vocab.py`, and `dataset.py`.
-- `.env.example` documents all four variables; `.gitignore` excludes local environment, cache, and Python-generated files.
-- `frontend/` remains an empty skeleton, as planned for Session 5.
+- Approved Files 00–04 remain under `docs/`; File 02–04 were corrected where live verification exposed concrete drift.
+- `backend/checkpoints/` contains the self-trained `speed.pt`, `balanced.pt`, and `accuracy.pt` files used by the Docker image.
+- The backend includes typed model, training, inference, API, container, and test modules.
+- The frontend contains the Vite React application, its lockfile, typed API boundary, responsive styling, and a deferred `react-force-graph-3d` graph view.
+- `.env.example`, Docker Compose, README, and CI are present for a clean local setup.
 
-## Test counts / coverage
-- No `pytest` files were added; model tests are intentionally deferred until the model class exists.
-- Manual data-pipeline verification passed with the real CoNLL04 download: all three splits loaded, the training-only vocabulary built, BIO tags and directed gold entity pairs validated, self-pairs excluded, and overlapping spans rejected.
-- `pip install --dry-run -r backend/requirements-lock.txt` resolved successfully in the clean Python 3.12 environment used to create the lockfile.
-
-## Bugs found
-None in the Session 1 implementation checks.
+## Validation
+- Real CoNLL04 loading completed for all 1,441 records. The train-only vocabulary contains 6,677 entries including the two reserved tokens.
+- All three trained checkpoints were exercised through the live API. A real balanced extraction returned 10 tokens, 3 entities, and 3 relations; the browser also rendered a live accuracy-tier graph with 3 entities and 2 relations.
+- Backend: 6 `pytest` checks pass. Frontend: type check, formatting check, 1 Vitest check, and production build pass.
+- Dependency audit reports no known vulnerabilities. Python lint and format checks pass.
+- Validation metrics are documented in `README.md`, explicitly separating gold-span relation behavior from the end-to-end predicted-span pipeline.
 
 ## Known open risk
-The live CoNLL04 download and documented schema are now verified. Model initialization, training updates, API behavior, containers, and the frontend remain unimplemented and need their planned-session checks.
+No Hugging Face Space, Cloudflare Pages project, or usable GitHub remote branch has been provided. The local build is complete, but publishing and deployment cannot be verified until those external targets exist and their configuration is supplied.
 
 ## What's next
-Session 2: implement `model/architecture.py`, `model/tiers.py`, the first training-loop pass, and the random-initialization test required by File 00.
+Publish the local commits to the GitHub repository, create or identify the Hugging Face Docker Space and Cloudflare Pages project, then add the production Pages URL to `ALLOWED_ORIGINS` and verify the deployed browser path.
