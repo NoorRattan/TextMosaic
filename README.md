@@ -23,7 +23,7 @@ cd ..
 The repository includes trained checkpoints. To train fresh, self-initialized weights from the source dataset:
 
 ```powershell
-.\.venv\Scripts\python -m backend.model.train --epochs 20 --export-directory backend\checkpoints
+.\.venv\Scripts\python -m backend.model.train --export-directory backend\checkpoints
 ```
 
 For the local two-service workflow:
@@ -46,13 +46,23 @@ The response uses the CoNLL04-aligned `tokens`, `entities`, and `relations` fiel
 
 ## Validation snapshot
 
-The committed checkpoints were selected on the validation split. Entity F1 requires an exact predicted entity type and span. Gold-span relation F1 isolates the relation head by supplying gold entity spans; end-to-end relation F1 is the stricter pipeline result using the NER head's predicted spans.
+The committed checkpoints were selected on the validation split after controlled seed and learning-rate experiments. Entity F1 requires an exact predicted entity type and span. Gold-span relation F1 isolates the relation head by supplying gold entity spans; end-to-end relation F1 is the stricter pipeline result using the NER head's predicted spans.
 
 | Tier | Entity F1 | Gold-span relation F1 | End-to-end relation F1 |
 |---|---:|---:|---:|
-| speed | 0.4224 | 0.4924 | 0.2254 |
-| balanced | 0.4358 | 0.4853 | 0.2292 |
-| accuracy | 0.5663 | 0.5510 | 0.3673 |
+| speed | 0.5181 | 0.5111 | 0.3012 |
+| balanced | 0.5549 | 0.4913 | 0.3815 |
+| accuracy | 0.6307 | 0.5676 | 0.3768 |
+
+## Final test snapshot
+
+The test split was held out from checkpoint selection and used for final reporting.
+
+| Tier | Entity F1 | Gold-span relation F1 | End-to-end relation F1 |
+|---|---:|---:|---:|
+| speed | 0.5499 | 0.4834 | 0.3123 |
+| balanced | 0.5831 | 0.5034 | 0.3556 |
+| accuracy | 0.6445 | 0.5807 | 0.4019 |
 
 ## Checks
 

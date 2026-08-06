@@ -2,7 +2,7 @@
 
 ## Status: Local project build complete — ready for repository publishing and deployment configuration
 
-## Sessions completed: 5
+## Sessions completed: 6
 
 ## Planned vs. actual
 | Stage | Planned | Actual | Status |
@@ -10,6 +10,7 @@
 | Data pipeline (loader, vocab, Dataset) | Session 1 | Live CoNLL04 loader, train-only vocabulary, BIO validation, and sentence-scoped gold relation candidates | Complete |
 | NER head training | Session 2 | Randomly initialized shared-BiLSTM NER head, deterministic decoding, and initialization coverage | Complete |
 | RE head + joint loss | Session 3 | Directed relation head, complete per-sentence candidate enumeration, class-imbalance handling, and three trained checkpoints | Complete |
+| Checkpoint optimization | Session 6 | Validation-only seed and learning-rate experiments; all three retained candidates improved held-out end-to-end relation F1, and the tuned recipe is the training default | Complete |
 | FastAPI + Docker | Session 4 | Stateless API, CORS, rate limiting, error envelopes, Docker definitions, compose setup, and backend coverage | API complete locally; container runtime pending Docker availability |
 | React frontend + deploy | Session 5 | Typed Vite UI, lazy 3D graph renderer, frontend coverage, and local browser verification | Complete locally; external deployment pending |
 
@@ -26,7 +27,7 @@
 - Backend: 6 `pytest` checks pass. Frontend: type check, formatting check, 1 Vitest check, and production build pass.
 - Dependency audit reports no known vulnerabilities. Python lint and format checks pass.
 - The local Docker CLI is unavailable, so Compose and image execution are not locally verified; the CI workflow now builds both images to cover Dockerfile compatibility on its Linux runner.
-- Validation metrics are documented in `README.md`, explicitly separating gold-span relation behavior from the end-to-end predicted-span pipeline.
+- Validation and untouched test metrics are documented in `README.md`, explicitly separating gold-span relation behavior from the end-to-end predicted-span pipeline.
 
 ## Known open risk
 No Hugging Face Space, Cloudflare Pages project, or usable GitHub remote branch has been provided. The local build is complete, but publishing and deployment cannot be verified until those external targets exist and their configuration is supplied. Docker Desktop is also unavailable in this environment, so local Compose execution remains unverified.

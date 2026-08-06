@@ -28,10 +28,10 @@ from backend.model.decoding import decode_bio_tag_ids
 from backend.model.tiers import TIER_CONFIGS, TierName, get_tier_config
 
 NER_PAD_LABEL: Final[int] = -100
-DEFAULT_EPOCHS: Final[int] = 20
+DEFAULT_EPOCHS: Final[int] = 30
 DEFAULT_BATCH_SIZE: Final[int] = 16
-DEFAULT_LEARNING_RATE: Final[float] = 1e-3
-DEFAULT_SEED: Final[int] = 17
+DEFAULT_LEARNING_RATE: Final[float] = 2e-3
+DEFAULT_SEED: Final[int] = 29
 
 
 @dataclass(frozen=True)
