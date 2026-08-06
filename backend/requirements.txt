@@ -4,3 +4,5 @@ uvicorn>=0.30
 datasets>=3.0
 pydantic>=2.8
 pytest>=8.0
+ruff>=0.12
+pip-audit>=2.7

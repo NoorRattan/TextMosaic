@@ -13,7 +13,6 @@ import re
 from pathlib import Path
 from typing import Final
 
-
 _PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 _ENV_KEY_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -37,7 +36,7 @@ def _load_dotenv(path: Path) -> None:
         value = value.strip()
         if not _ENV_KEY_PATTERN.fullmatch(key):
             raise ValueError(f"Invalid .env variable name on line {line_number}: {key!r}.")
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"\"", "'"}:
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
             value = value[1:-1]
         os.environ.setdefault(key, value)
 
@@ -45,7 +44,7 @@ def _load_dotenv(path: Path) -> None:
 _load_dotenv(_PROJECT_ROOT / ".env")
 
 TEXTMOSAIC_DATA_DIR: Final[str] = os.getenv("TEXTMOSAIC_DATA_DIR", "./data")
-ALLOWED_ORIGINS: Final[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+ALLOWED_ORIGINS: Final[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 
 try:
     PORT: Final[int] = int(os.getenv("PORT", "7860"))
