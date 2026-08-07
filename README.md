@@ -34,6 +34,14 @@ For the local two-service workflow:
 docker compose up --build
 ```
 
+Or start the services directly in two terminals:
+
+```powershell
+.\.venv\Scripts\python -m uvicorn backend.main:app --host 127.0.0.1 --port 7860
+cd frontend
+npm run dev -- --host 127.0.0.1
+```
+
 Open `http://localhost:5173`. The frontend calls `http://localhost:7860`; the backend health endpoint is `http://localhost:7860/health`.
 
 For a deployed frontend, set `VITE_API_BASE_URL` at build time to the public FastAPI URL and add the exact frontend origin to the backend's `ALLOWED_ORIGINS` allow-list. The value is public configuration, not a secret.

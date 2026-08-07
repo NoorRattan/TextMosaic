@@ -38,7 +38,7 @@ function toClientResponse(response: ApiExtractResponse): ExtractResponse {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(
+  const timeout = globalThis.setTimeout(
     () => controller.abort(),
     REQUEST_TIMEOUT_MS,
   );
@@ -55,7 +55,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new Error("Unable to reach the extraction service.");
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ApiErrorResponse;
@@ -70,7 +70,7 @@ export async function getTiers(): Promise<TierInfo[]> {
   let lastError: Error | undefined;
   for (const delay of [...TIER_RETRY_DELAYS_MS, 0]) {
     if (delay > 0) {
-      await new Promise((resolve) => window.setTimeout(resolve, delay));
+      await new Promise((resolve) => globalThis.setTimeout(resolve, delay));
     }
     try {
       return (await request<ApiTierResponse>("/tiers")).tiers;

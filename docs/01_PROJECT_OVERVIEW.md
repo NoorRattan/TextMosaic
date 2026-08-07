@@ -55,17 +55,22 @@ datastore" note.
 - Professional commit format: `feat: add feature`, `fix: resolve race`, `refactor: extract service`,
   `test: add coverage`, `docs: update guide`, `chore: bump version`, `style: apply formatting`.
 
-## Color Scheme
+## Implemented Visual Palette
+The default palette in File 00 remains the semantic palette for graph entities and edges. The
+implemented product interface uses the user-approved editorial palette below so the application is
+not visually reduced to a generic dark dashboard.
+
 | Role | Hex |
 |---|---|
-| Background | `#0B0F14` |
-| Entity nodes | `#2DD4BF` |
-| Relation edges | `#FB7185` |
-| Text / neutral | `#94A3B8` |
+| Interface field | `#14221F` |
+| Paper surface | `#F0E9DC` |
+| Signal accent | `#D16243` |
+| Secondary accent | `#D6DF94` |
 
-## Typography (default — not yet discussed with you, change if you want)
-- UI text: **Inter** (clean, free, wide platform support)
-- Any code/data display (e.g. raw JSON view): **JetBrains Mono**
+## Typography
+- UI text: **DM Sans** (a modern grotesque with robust small-text readability)
+- Editorial display: **Instrument Serif** (used sparingly for product emphasis)
+- Data and controls: **DM Mono**
 
 ## Known Quirks (platform-specific, verified earlier this conversation)
 - HF Spaces Docker SDK expects the container listening on **port 7860** — `Dockerfile`'s `CMD` and

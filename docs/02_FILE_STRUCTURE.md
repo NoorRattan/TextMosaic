@@ -47,6 +47,7 @@ textmosaic/                          (clones to N:\Github-Repo\textmosaic locall
 │       ├── test_training_updates.py  # Minimum Testing Floor: asserts relation-F1 improves over >=2 epochs
 │       └── test_api.py               # /extract, /health, /tiers smoke tests
 └── frontend/
+    ├── .env.example                  # public build-time API base URL; copy to .env.local for a local override
     ├── package-lock.json
     ├── package.json
     ├── tsconfig.json
@@ -93,8 +94,8 @@ runs (Session 1), which is the verified source of truth, not this document.
 `pydantic>=2.8`, `pytest>=8.0`
 
 **Frontend (`package.json`):** `react^19.2.8`, `vite^8.2.1`, `typescript^7.0.2`,
-`react-force-graph-3d^1.29.1`, and `three^0.185.1`. Exact resolved transitive versions are in
-`frontend/package-lock.json`.
+`framer-motion`, `react-force-graph-3d^1.29.1`, and `three^0.185.1`. Exact resolved transitive
+versions are in `frontend/package-lock.json`.
 
 ## Environment Variables
 | Var | Where used | Default | Notes |
@@ -103,3 +104,4 @@ runs (Session 1), which is the verified source of truth, not this document.
 | `ALLOWED_ORIGINS` | `main.py` CORS middleware | `http://localhost:5173,http://127.0.0.1:5173` | Explicit local-dev allow-list. Add the real Cloudflare Pages domain once it exists — **UNVERIFIED / TBD until frontend is deployed**, not invented here |
 | `PORT` | `Dockerfile` CMD, `uvicorn` | `7860` | Locked — HF Spaces Docker SDK requirement |
 | `MODEL_TIER_DEFAULT` | `config.py`, `routes.py` | `balanced` | Loaded from `.env` before route configuration; used when a request omits `tier` |
+| `VITE_API_BASE_URL` | `frontend/src/api/client.ts` | `http://127.0.0.1:7860` | Public build-time frontend API target. Set to the deployed backend URL before building the frontend. |
