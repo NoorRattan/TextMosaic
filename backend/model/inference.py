@@ -8,10 +8,10 @@ from typing import Any, cast
 
 import torch
 
-from backend.data.dataset import RELATION_LABELS
+from backend.data.dataset import RELATION_LABELS, EntitySpan
 from backend.data.vocab import PAD_TOKEN, UNK_TOKEN
 from backend.model.architecture import JointNERRE
-from backend.model.decoding import decode_bio_tag_ids, tokenize_text
+from backend.model.decoding import decode_bio_tag_ids, split_token_sentences, tokenize_text
 from backend.model.tiers import TierConfig, TierName
 
 
@@ -66,10 +66,40 @@ class InferenceEngine:
         }
 
     def extract(self, text: str) -> dict[str, object]:
-        """Tokenize text, decode NER spans, and classify pairs from those spans."""
+        """Extract sentence-scoped relations while preserving document token offsets."""
         tokens = tokenize_text(text)
         if not tokens:
             return {"tokens": [], "entities": [], "relations": []}
+
+        entities: list[dict[str, object]] = []
+        relations: list[dict[str, object]] = []
+        token_offset = 0
+        entity_offset = 0
+        for sentence_tokens in split_token_sentences(tokens):
+            sentence_entities, sentence_relations = self._extract_sentence(sentence_tokens)
+            entities.extend(
+                {
+                    "type": entity.type,
+                    "start": entity.start + token_offset,
+                    "end": entity.end + token_offset,
+                }
+                for entity in sentence_entities
+            )
+            relations.extend(
+                {
+                    "type": relation_type,
+                    "head": head + entity_offset,
+                    "tail": tail + entity_offset,
+                }
+                for relation_type, head, tail in sentence_relations
+            )
+            token_offset += len(sentence_tokens)
+            entity_offset += len(sentence_entities)
+
+        return {"tokens": tokens, "entities": entities, "relations": relations}
+
+    def _extract_sentence(self, tokens: tuple[str, ...]) -> tuple[tuple[EntitySpan, ...], list[tuple[str, int, int]]]:
+        """Run both heads over exactly one sentence's token representations."""
 
         token_ids = torch.tensor(
             [[self._vocabulary.get(token, self._unknown_token_id) for token in tokens]],
@@ -92,12 +122,8 @@ class InferenceEngine:
 
         no_relation_id = RELATION_LABELS.index("no_relation")
         relations = [
-            {"type": RELATION_LABELS[prediction], "head": head, "tail": tail}
+            (RELATION_LABELS[prediction], head, tail)
             for (head, tail), prediction in zip(candidates, relation_predictions, strict=True)
             if prediction != no_relation_id
         ]
-        return {
-            "tokens": tokens,
-            "entities": [{"type": entity.type, "start": entity.start, "end": entity.end} for entity in entities],
-            "relations": relations,
-        }
+        return entities, relations

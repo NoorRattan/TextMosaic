@@ -55,6 +55,20 @@ def test_extract_returns_a_stable_validation_error() -> None:
         assert response.json()["error"]["code"] == "validation_error"
 
 
+def test_extract_rejects_an_oversized_request_before_processing() -> None:
+    client = TestClient(create_app(FakeExtractionService()))
+
+    response = client.post("/extract", json={"text": "a" * 20_000})
+
+    assert response.status_code == 413
+    assert response.json() == {
+        "error": {
+            "code": "request_too_large",
+            "message": "Request body is too large.",
+        }
+    }
+
+
 def test_rate_limiter_blocks_the_next_request_after_its_limit() -> None:
     limiter = InMemoryRateLimiter(limit=2, window_seconds=60)
 

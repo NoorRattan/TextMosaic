@@ -1,9 +1,9 @@
 """Centralized environment configuration for TextMosaic.
 
-This module is the only place the current backend reads TEXTMOSAIC_DATA_DIR,
-ALLOWED_ORIGINS, PORT, and MODEL_TIER_DEFAULT from the environment. It also loads an optional
-repository-root .env file with the standard library so a local override works
-without adding a configuration dependency.
+This module is the only place the current backend reads configuration from the
+environment. It also loads an optional repository-root .env file with the
+standard library so a local override works without adding a configuration
+dependency.
 """
 
 from __future__ import annotations
@@ -51,3 +51,11 @@ try:
     PORT: Final[int] = int(os.getenv("PORT", "7860"))
 except ValueError as error:
     raise ValueError("PORT must be an integer.") from error
+
+try:
+    MAX_REQUEST_BODY_BYTES: Final[int] = int(os.getenv("MAX_REQUEST_BODY_BYTES", "16384"))
+except ValueError as error:
+    raise ValueError("MAX_REQUEST_BODY_BYTES must be an integer.") from error
+
+if MAX_REQUEST_BODY_BYTES <= 0:
+    raise ValueError("MAX_REQUEST_BODY_BYTES must be greater than zero.")

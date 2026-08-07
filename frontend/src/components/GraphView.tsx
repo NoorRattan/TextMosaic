@@ -1,6 +1,7 @@
 import ForceGraph3D from "react-force-graph-3d";
 
 import type { ExtractResponse } from "../types";
+import { escapeHtml } from "./graphHtml";
 
 interface GraphViewProps {
   result: ExtractResponse;
@@ -21,20 +22,6 @@ interface GraphLink {
 
 const entityColor = "#2DD4BF";
 const relationColor = "#FB7185";
-
-function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>'"]/g,
-    (character) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "'": "&#39;",
-        '"': "&quot;",
-      })[character] ?? character,
-  );
-}
 
 function toGraphData(result: ExtractResponse): {
   nodes: GraphNode[];

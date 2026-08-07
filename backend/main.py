@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from backend.api.routes import ExtractionService, create_router
-from backend.config import ALLOWED_ORIGINS
+from backend.config import ALLOWED_ORIGINS, MAX_REQUEST_BODY_BYTES
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
@@ -28,6 +28,23 @@ def create_app(service: ExtractionService | None = None) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
+
+    @app.middleware("http")
+    async def request_size_limit(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        """Reject oversized requests before route validation reads their body."""
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                request_size = int(content_length)
+            except ValueError:
+                request_size = 0
+            if request_size > MAX_REQUEST_BODY_BYTES:
+                return _error_response(
+                    413,
+                    "request_too_large",
+                    "Request body is too large.",
+                )
+        return await call_next(request)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:

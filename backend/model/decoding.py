@@ -8,12 +8,37 @@ from typing import cast
 
 from backend.data.dataset import BIO_TAGS, EntitySpan, EntityType
 
-_TOKEN_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[.'-][A-Za-z0-9]+)*|[^\w\s]", re.UNICODE)
+_TOKEN_PATTERN = re.compile(
+    r"(?:[A-Za-z]\.){2,}|[A-Za-z0-9]+(?:[.'-][A-Za-z0-9]+)*|[^\w\s]",
+    re.UNICODE,
+)
+_SENTENCE_TERMINATORS = frozenset({".", "!", "?"})
+_TITLE_ABBREVIATIONS = frozenset({"dr", "mr", "mrs", "ms", "prof", "sr", "jr", "st"})
 
 
 def tokenize_text(text: str) -> list[str]:
     """Split user text without fetching a tokenizer or pretrained vocabulary."""
     return _TOKEN_PATTERN.findall(text)
+
+
+def split_token_sentences(tokens: Sequence[str]) -> tuple[tuple[str, ...], ...]:
+    """Split locally tokenized text without allowing relation pairs across sentences.
+
+    The tokenizer keeps standalone sentence terminators as individual tokens while
+    preserving abbreviations such as ``U.S.`` as one token, so this conservative
+    splitter does not need an external or pretrained sentence-segmentation model.
+    """
+    sentences: list[tuple[str, ...]] = []
+    current: list[str] = []
+    for token in tokens:
+        current.append(token)
+        is_title_abbreviation = token == "." and len(current) >= 2 and current[-2].casefold() in _TITLE_ABBREVIATIONS
+        if token in _SENTENCE_TERMINATORS and not is_title_abbreviation:
+            sentences.append(tuple(current))
+            current = []
+    if current:
+        sentences.append(tuple(current))
+    return tuple(sentences)
 
 
 def decode_bio_tag_ids(tag_ids: Sequence[int]) -> tuple[EntitySpan, ...]:

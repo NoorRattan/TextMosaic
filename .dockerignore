@@ -1,0 +1,11 @@
+.git
+.github
+.env
+.venv
+data
+frontend
+docs
+BUILD_PROGRESS.md
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache

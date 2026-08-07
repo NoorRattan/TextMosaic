@@ -3,6 +3,7 @@ import type { Variants } from "framer-motion";
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 
 import { extractText, getTiers } from "./api/client";
+import { GraphErrorBoundary } from "./components/GraphErrorBoundary";
 import { TextInput } from "./components/TextInput";
 import { TierSelector } from "./components/TierSelector";
 import type { ExtractResponse, TierInfo, TierName } from "./types";
@@ -257,11 +258,15 @@ export default function App() {
               )}
             </div>
             {result ? (
-              <Suspense
-                fallback={<GraphPlaceholder message="Assembling the field…" />}
-              >
-                <GraphView result={result} />
-              </Suspense>
+              <GraphErrorBoundary>
+                <Suspense
+                  fallback={
+                    <GraphPlaceholder message="Assembling the field…" />
+                  }
+                >
+                  <GraphView result={result} />
+                </Suspense>
+              </GraphErrorBoundary>
             ) : (
               <GraphPlaceholder
                 message={
