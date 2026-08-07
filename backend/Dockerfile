@@ -6,8 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY backend/requirements-lock.txt /tmp/requirements-lock.txt
-RUN pip install --no-cache-dir --requirement /tmp/requirements-lock.txt
+COPY backend/requirements-runtime.txt /tmp/requirements-runtime.txt
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 \
+    && pip install --no-cache-dir --requirement /tmp/requirements-runtime.txt
 
 COPY backend /app/backend
 

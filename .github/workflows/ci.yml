@@ -18,7 +18,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install --requirement backend/requirements-lock.txt
+      - run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0
+      - run: grep -v '^torch==' backend/requirements-lock.txt > /tmp/requirements-without-torch.txt
+      - run: python -m pip install --requirement /tmp/requirements-without-torch.txt
       - run: ruff check backend
       - run: ruff format --check backend
       - run: pip-audit --requirement backend/requirements-lock.txt

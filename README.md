@@ -34,6 +34,8 @@ For the local two-service workflow:
 docker compose up --build
 ```
 
+The backend image uses the CPU-only PyTorch wheel because the deployed API performs CPU inference; the full development lockfile remains available for dataset and training work.
+
 Or start the services directly in two terminals:
 
 ```powershell
