@@ -1,5 +1,11 @@
 .env
 frontend/.env.local
+/BUILD_PROGRESS.md
+/docs/00_LOCKED_FACTS.md
+/docs/01_PROJECT_OVERVIEW.md
+/docs/02_FILE_STRUCTURE.md
+/docs/03_DATA_MODELS.md
+/docs/04_API_AND_SECURITY.md
 __pycache__/
 *.py[cod]
 .pytest_cache/
