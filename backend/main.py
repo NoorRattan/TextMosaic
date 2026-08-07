@@ -7,20 +7,87 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, Response
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from backend.api.routes import ExtractionService, create_router
-from backend.config import ALLOWED_ORIGINS, MAX_REQUEST_BODY_BYTES
+from backend.config import ALLOWED_HOSTS, ALLOWED_ORIGINS, MAX_REQUEST_BODY_BYTES
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
 
 
+class RequestBodyLimitMiddleware:
+    """Bound request buffering before FastAPI parses a JSON payload."""
+
+    def __init__(self, app: ASGIApp, max_body_bytes: int) -> None:
+        self.app = app
+        self.max_body_bytes = max_body_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope["method"] not in {"POST", "PUT", "PATCH"}:
+            await self.app(scope, receive, send)
+            return
+
+        content_length = next(
+            (value for name, value in scope.get("headers", []) if name.lower() == b"content-length"),
+            None,
+        )
+        if content_length is not None:
+            try:
+                declared_size = int(content_length)
+            except ValueError:
+                declared_size = 0
+            if declared_size > self.max_body_bytes:
+                await _error_response(
+                    413,
+                    "request_too_large",
+                    "Request body is too large.",
+                )(scope, receive, send)
+                return
+
+        chunks: list[bytes] = []
+        received_size = 0
+        more_body = True
+        while more_body:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                await self.app(scope, receive, send)
+                return
+            if message["type"] != "http.request":
+                continue
+            chunk = message.get("body", b"")
+            received_size += len(chunk)
+            if received_size > self.max_body_bytes:
+                await _error_response(
+                    413,
+                    "request_too_large",
+                    "Request body is too large.",
+                )(scope, receive, send)
+                return
+            chunks.append(chunk)
+            more_body = message.get("more_body", False)
+
+        body = b"".join(chunks)
+        consumed = False
+
+        async def receive_buffered() -> Message:
+            nonlocal consumed
+            if consumed:
+                return {"type": "http.disconnect"}
+            consumed = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        await self.app(scope, receive_buffered, send)
+
+
 def create_app(service: ExtractionService | None = None) -> FastAPI:
     """Create the application with test-injectable extraction behavior."""
     app = FastAPI(title="TextMosaic", version="1.0.0", docs_url=None, redoc_url=None)
     origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
+    hosts = [host.strip() for host in ALLOWED_HOSTS.split(",") if host.strip()]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -28,23 +95,8 @@ def create_app(service: ExtractionService | None = None) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
-
-    @app.middleware("http")
-    async def request_size_limit(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        """Reject oversized requests before route validation reads their body."""
-        content_length = request.headers.get("content-length")
-        if content_length is not None:
-            try:
-                request_size = int(content_length)
-            except ValueError:
-                request_size = 0
-            if request_size > MAX_REQUEST_BODY_BYTES:
-                return _error_response(
-                    413,
-                    "request_too_large",
-                    "Request body is too large.",
-                )
-        return await call_next(request)
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_bytes=MAX_REQUEST_BODY_BYTES)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:

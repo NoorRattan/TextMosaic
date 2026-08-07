@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
+
 from fastapi.testclient import TestClient
 
 from backend.api.routes import InMemoryRateLimiter
@@ -67,6 +70,65 @@ def test_extract_rejects_an_oversized_request_before_processing() -> None:
             "message": "Request body is too large.",
         }
     }
+
+
+def test_extract_rejects_an_oversized_chunked_request_before_body_buffering() -> None:
+    app = create_app(FakeExtractionService())
+    payload = json.dumps({"text": "a" * 20_000}).encode()
+    request_messages = iter(
+        [
+            {"type": "http.request", "body": payload[:10_000], "more_body": True},
+            {"type": "http.request", "body": payload[10_000:], "more_body": False},
+        ]
+    )
+    sent_messages: list[dict[str, object]] = []
+
+    async def receive() -> dict[str, object]:
+        return next(request_messages)
+
+    async def send(message: dict[str, object]) -> None:
+        sent_messages.append(message)
+
+    async def run_request() -> None:
+        await app(
+            {
+                "type": "http",
+                "asgi": {"version": "3.0"},
+                "http_version": "1.1",
+                "method": "POST",
+                "scheme": "http",
+                "path": "/extract",
+                "raw_path": b"/extract",
+                "query_string": b"",
+                "headers": [
+                    (b"host", b"testserver"),
+                    (b"content-type", b"application/json"),
+                    (b"transfer-encoding", b"chunked"),
+                ],
+                "client": ("127.0.0.1", 50000),
+                "server": ("testserver", 80),
+            },
+            receive,
+            send,
+        )
+
+    asyncio.run(run_request())
+
+    assert sent_messages[0]["status"] == 413
+    assert json.loads(sent_messages[1]["body"]) == {
+        "error": {
+            "code": "request_too_large",
+            "message": "Request body is too large.",
+        }
+    }
+
+
+def test_untrusted_host_is_rejected() -> None:
+    client = TestClient(create_app(FakeExtractionService()))
+
+    response = client.get("/health", headers={"host": "unexpected.example"})
+
+    assert response.status_code == 400
 
 
 def test_rate_limiter_blocks_the_next_request_after_its_limit() -> None:
