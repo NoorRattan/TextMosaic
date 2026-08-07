@@ -17,7 +17,6 @@ from torch import Tensor, nn
 from backend.config import TEXTMOSAIC_DATA_DIR
 from backend.data.conll04_loader import load_conll04
 from backend.data.dataset import (
-    BIO_TAGS,
     RELATION_LABELS,
     CoNLL04Dataset,
     SentenceSample,
@@ -121,15 +120,6 @@ def _relation_class_weights(samples: Sequence[SentenceSample], device: torch.dev
     return torch.tensor([weight / mean_weight for weight in weights], device=device)
 
 
-def _ner_class_weights(samples: Sequence[SentenceSample], device: torch.device) -> Tensor:
-    """Prevent O tokens from overwhelming the token-level NER cross-entropy."""
-    counts = Counter(tag_id for sample in samples for tag_id in sample.bio_tag_ids)
-    total = sum(counts.values())
-    weights = [(total / counts[tag_id]) ** 0.5 if counts.get(tag_id, 0) else 1.0 for tag_id in range(len(BIO_TAGS))]
-    mean_weight = sum(weights) / len(weights)
-    return torch.tensor([weight / mean_weight for weight in weights], device=device)
-
-
 def _relation_loss(
     model: JointNERRE,
     encoded: Tensor,
@@ -187,7 +177,7 @@ def evaluate(
             batch = collate_samples((sample,), pad_token_id, device)
             encoded, ner_logits = model(batch.token_ids, batch.lengths)
             length = len(sample.tokens)
-            decoded = decode_bio_tag_ids(ner_logits[0, :length].argmax(dim=-1).tolist())
+            decoded = decode_bio_tag_ids(model.decode_ner(ner_logits, batch.lengths)[0])
             for entity in decoded:
                 predicted_entities[(sentence_index, entity)] += 1
             for entity in sample.entities:
@@ -259,7 +249,6 @@ def train_tier(
     tier_config = get_tier_config(tier)
     model = JointNERRE(len(vocabulary), vocabulary[PAD_TOKEN], tier_config).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=settings.learning_rate, weight_decay=1e-4)
-    ner_criterion = nn.CrossEntropyLoss(weight=_ner_class_weights(train_samples, device), ignore_index=NER_PAD_LABEL)
     relation_criterion = nn.CrossEntropyLoss(weight=_relation_class_weights(train_samples, device))
     best_state: dict[str, Tensor] | None = None
     best_metrics: Metrics | None = None
@@ -274,7 +263,7 @@ def train_tier(
             batch = collate_samples(sample_batch, vocabulary[PAD_TOKEN], device)
             optimizer.zero_grad(set_to_none=True)
             encoded, ner_logits = model(batch.token_ids, batch.lengths)
-            ner_loss = ner_criterion(ner_logits.flatten(0, 1), batch.bio_tag_ids.flatten())
+            ner_loss = model.ner_neg_log_likelihood(ner_logits, batch.bio_tag_ids, batch.lengths)
             relation_loss = _relation_loss(model, encoded, batch, relation_criterion)
             loss = ner_loss + relation_loss
             loss.backward()
@@ -296,7 +285,8 @@ def train_tier(
         raise RuntimeError("Training produced no checkpoint candidate.")
 
     checkpoint = {
-        "format_version": 1,
+        "format_version": 2,
+        "ner_decoder": "bio_constrained_crf",
         "tier": tier,
         "tier_config": asdict(tier_config),
         "vocabulary": vocabulary,

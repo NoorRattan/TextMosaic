@@ -4,9 +4,11 @@ TextMosaic turns text into an interactive 3D knowledge graph. Its named-entity a
 
 ## Run locally
 
-Prerequisites: Python 3.11 or newer, Node.js 24 or newer, and Docker Desktop for the container workflow.
+Prerequisites: Python 3.11 or newer, Node.js 24 or newer, Git LFS, and Docker Desktop for the container workflow.
 
 ```powershell
+git lfs install
+git lfs pull
 Copy-Item .env.example .env
 # Optionally set TEXTMOSAIC_DATA_DIR in .env to an external writable location.
 Copy-Item frontend\.env.example frontend\.env.local
@@ -64,9 +66,9 @@ The committed checkpoints were selected on the validation split after controlled
 
 | Tier | Entity F1 | Gold-span relation F1 | End-to-end relation F1 |
 |---|---:|---:|---:|
-| speed | 0.5181 | 0.5111 | 0.3012 |
-| balanced | 0.5549 | 0.4913 | 0.3815 |
-| accuracy | 0.6307 | 0.5676 | 0.3768 |
+| speed | 0.5977 | 0.5094 | 0.3507 |
+| balanced | 0.6131 | 0.5235 | 0.3944 |
+| accuracy | 0.6684 | 0.5203 | 0.3816 |
 
 ## Final test snapshot
 
@@ -74,9 +76,9 @@ The test split was held out from checkpoint selection and used for final reporti
 
 | Tier | Entity F1 | Gold-span relation F1 | End-to-end relation F1 |
 |---|---:|---:|---:|
-| speed | 0.5499 | 0.4834 | 0.3123 |
-| balanced | 0.5831 | 0.5034 | 0.3556 |
-| accuracy | 0.6445 | 0.5807 | 0.4019 |
+| speed | 0.6439 | 0.4891 | 0.3539 |
+| balanced | 0.6205 | 0.5392 | 0.3866 |
+| accuracy | 0.6825 | 0.5327 | 0.4021 |
 
 ## Checks
 

@@ -63,6 +63,7 @@ class InferenceEngine:
             "tier_config": asdict(tier_config),
             "metrics": payload.get("metrics", {}),
             "best_epoch": payload.get("best_epoch"),
+            "ner_decoder": payload.get("ner_decoder", "greedy_bio"),
         }
 
     def extract(self, text: str) -> dict[str, object]:
@@ -109,7 +110,7 @@ class InferenceEngine:
         lengths = torch.tensor([len(tokens)], dtype=torch.long, device=self._device)
         with torch.no_grad():
             encoded, ner_logits = self._model(token_ids, lengths)
-            entities = decode_bio_tag_ids(ner_logits[0].argmax(dim=-1).tolist())
+            entities = decode_bio_tag_ids(self._model.decode_ner(ner_logits, lengths)[0])
             spans = [(entity.start, entity.end) for entity in entities]
             candidates = [
                 (head, tail) for head in range(len(entities)) for tail in range(len(entities)) if head != tail
