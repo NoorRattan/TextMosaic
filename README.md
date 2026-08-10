@@ -14,20 +14,24 @@ TextMosaic turns text into an interactive 3D knowledge graph. Its named-entity a
 
 ## Start here — no technical knowledge needed
 
-**[Open the live TextMosaic demo](https://treck001-textmosaic-demo.hf.space)**, type a sentence, choose a model tier, and press **Extract knowledge graph**. You will see:
+**[Open the TextMosaic product](https://noorrattan.github.io/TextMosaic/)**, type a sentence, choose a model tier, and press **Build knowledge graph**. You will see:
 
 1. the words the model read;
 2. the people, organizations, places, and other entities it found; and
 3. the relationships it predicted between those entities.
 
-The public demo runs the real `speed`, `balanced`, and `accuracy` checkpoints
-on Hugging Face ZeroGPU. Each tier has completed a live extraction check. A
-short wait for a GPU is normal on the free demo; it is not a broken connection.
+The product interface is the intended place to explore the interactive 3D
+graph. It connects to the real `speed`, `balanced`, and `accuracy` checkpoints
+hosted on Hugging Face ZeroGPU. A short wait for a GPU is normal on the free
+model service; it is not a broken connection.
+
+Want only the raw entities and relations? Use the
+[direct model demo](https://treck001-textmosaic-demo.hf.space) instead.
 
 | Link | What it is for |
 |---|---|
-| [Open the 3D product](https://noorrattan.github.io/TextMosaic/) | The finished React interface: type text, run a model, and explore the resulting 3D graph. |
-| [Try the model demo](https://treck001-textmosaic-demo.hf.space) | The direct model interface, useful when you only need the extracted entities and relations. |
+| [Open TextMosaic](https://noorrattan.github.io/TextMosaic/) | The finished product: write text, run a model, and explore its 3D knowledge graph. |
+| [Direct model demo](https://treck001-textmosaic-demo.hf.space) | A compact extraction interface for entities, relations, and raw JSON. |
 | [Source code](https://github.com/NoorRattan/TextMosaic) | The React frontend, FastAPI service, checkpoints, and deployment files. |
 | [Automated checks](https://github.com/NoorRattan/TextMosaic/actions) | Builds, tests, and the full container smoke test run for every push to `main`. |
 
