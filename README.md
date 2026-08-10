@@ -12,6 +12,30 @@ pinned: false
 
 TextMosaic turns text into an interactive 3D knowledge graph. Its named-entity and relation models are trained from random initialization on CoNLL04; inference never calls a hosted language model or loads pretrained language weights.
 
+## Start here — no technical knowledge needed
+
+**[Open the live TextMosaic demo](https://treck001-textmosaic-demo.hf.space)**, type a sentence, choose a model tier, and press **Extract knowledge graph**. You will see:
+
+1. the words the model read;
+2. the people, organizations, places, and other entities it found; and
+3. the relationships it predicted between those entities.
+
+The public demo runs the real `speed`, `balanced`, and `accuracy` checkpoints
+on Hugging Face ZeroGPU. Each tier has completed a live extraction check. A
+short wait for a GPU is normal on the free demo; it is not a broken connection.
+
+| Link | What it is for |
+|---|---|
+| [Try the live demo](https://treck001-textmosaic-demo.hf.space) | The simplest way to use TextMosaic. No setup required. |
+| [Source code](https://github.com/NoorRattan/TextMosaic) | The React frontend, FastAPI service, checkpoints, and deployment files. |
+| [Automated checks](https://github.com/NoorRattan/TextMosaic/actions) | Builds, tests, and the full container smoke test run for every push to `main`. |
+
+### Which model should I pick?
+
+- **balanced** — start here. It is the default trade-off between speed and accuracy.
+- **speed** — choose this when you want the quickest response.
+- **accuracy** — choose this when finding entities is more important than response time.
+
 ## Run locally
 
 Prerequisites: Python 3.11 or newer, Node.js 24 or newer, Git LFS, and Docker Desktop for the container workflow.
