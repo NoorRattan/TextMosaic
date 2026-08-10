@@ -1,3 +1,13 @@
+---
+title: TextMosaic
+emoji: 🧩
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # TextMosaic
 
 TextMosaic turns text into an interactive 3D knowledge graph. Its named-entity and relation models are trained from random initialization on CoNLL04; inference never calls a hosted language model or loads pretrained language weights.
@@ -49,6 +59,26 @@ npm run dev -- --host 127.0.0.1
 Open `http://localhost:5173`. The frontend calls `http://localhost:7860`; the backend health endpoint is `http://localhost:7860/health`.
 
 ## Deploy
+
+### Hugging Face Space (complete demo)
+
+This repository is a self-contained Docker Space: it builds the frontend,
+starts the inference API privately, and serves both through one public URL. The
+browser calls the same-origin `/api` route, so no public API URL or CORS setup
+is required.
+
+1. Create a **Docker** Space on Hugging Face.
+2. Push this repository to that Space, including its Git LFS checkpoint files.
+3. In **Settings → Variables**, set `ALLOWED_HOSTS` to the Space hostname (for
+   example, `YOUR-SPACE.hf.space`). Do not add a protocol or path.
+4. Wait for the Space build to complete, then open the Space URL. `GET /health`
+   confirms both the public proxy and the API are ready.
+
+The root `Dockerfile` is specifically for this single-Space demo. It does not
+require any secrets. The existing `backend/Dockerfile` and `frontend/Dockerfile`
+remain available for a two-service deployment.
+
+### Separate frontend and backend services
 
 The frontend API address is runtime configuration, not a Docker build argument. Before starting the two public services, configure these exact values in the hosting platform's environment-variable UI:
 

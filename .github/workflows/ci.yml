@@ -50,3 +50,15 @@ jobs:
       - run: npm run test
       - run: npm run build
       - run: docker build --file Dockerfile --tag textmosaic-frontend-ci .
+
+  huggingface-space:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: docker build --tag textmosaic-hf-space-ci .
+      - run: docker run --detach --name textmosaic-hf-space-ci --publish 7860:7860 --env ALLOWED_HOSTS=localhost,127.0.0.1 textmosaic-hf-space-ci
+      - run: for attempt in $(seq 1 30); do curl --fail --silent http://localhost:7860/health && exit 0; sleep 2; done; docker logs textmosaic-hf-space-ci; exit 1
+      - run: curl --fail --silent http://localhost:7860/api/tiers
+      - run: curl --fail --silent http://localhost:7860/ | grep --fixed-strings '<div id="root"></div>'

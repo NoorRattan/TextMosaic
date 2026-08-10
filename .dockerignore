@@ -3,9 +3,11 @@
 .env
 .venv
 data
-frontend
 docs
 BUILD_PROGRESS.md
+frontend/node_modules
+frontend/dist
+frontend/.env.local
 **/__pycache__
 **/*.py[cod]
 **/.pytest_cache
