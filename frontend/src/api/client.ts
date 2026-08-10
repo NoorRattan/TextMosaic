@@ -170,6 +170,10 @@ interface GradioCallResponse {
   event_id?: string;
 }
 
+interface GradioErrorEvent {
+  error?: string;
+}
+
 function isTierName(value: string): value is TierName {
   return value === "speed" || value === "balanced" || value === "accuracy";
 }
@@ -211,15 +215,32 @@ async function extractWithGradio(
   if (!response.ok) {
     throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
   }
-  const completeEvent = (await response.text())
-    .split("\n\n")
-    .find((event) => event.includes("event: complete"));
+  const events = (await response.text()).split("\n\n");
+  const completeEvent = events.find((event) =>
+    event.includes("event: complete"),
+  );
+  const errorEvent = events.find((event) => event.includes("event: error"));
   const data = completeEvent
     ?.split("\n")
     .filter((line) => line.startsWith("data: "))
     .map((line) => line.slice("data: ".length))
     .join("\n");
   if (!data) {
+    const errorData = errorEvent
+      ?.split("\n")
+      .find((line) => line.startsWith("data: "))
+      ?.slice("data: ".length);
+    if (errorData) {
+      let error: GradioErrorEvent | undefined;
+      try {
+        error = JSON.parse(errorData) as GradioErrorEvent;
+      } catch {
+        error = undefined;
+      }
+      if (error?.error) {
+        throw new Error(error.error);
+      }
+    }
     throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
   }
   try {

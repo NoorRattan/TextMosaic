@@ -156,4 +156,38 @@ describe("toClientResponse", () => {
       expect.any(Object),
     );
   });
+
+  it("preserves a useful Gradio queue error for the product UI", async () => {
+    (
+      globalThis as typeof globalThis & {
+        __TEXTMOSAIC_CONFIG__?: {
+          apiBaseUrl: string;
+          apiTransport: "gradio";
+        };
+      }
+    ).__TEXTMOSAIC_CONFIG__ = {
+      apiBaseUrl: "https://demo.example.test/api",
+      apiTransport: "gradio",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ event_id: "event-456" }), {
+            headers: { "Content-Type": "application/json" },
+          }),
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            'event: error\ndata: {"error":"ZeroGPU quota exceeded"}\n\n',
+            { headers: { "Content-Type": "text/event-stream" } },
+          ),
+        ),
+    );
+
+    await expect(extractText("Ada", "balanced")).rejects.toThrow(
+      "ZeroGPU quota exceeded",
+    );
+  });
 });
