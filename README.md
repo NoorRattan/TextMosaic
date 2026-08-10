@@ -26,7 +26,8 @@ short wait for a GPU is normal on the free demo; it is not a broken connection.
 
 | Link | What it is for |
 |---|---|
-| [Try the live demo](https://treck001-textmosaic-demo.hf.space) | The simplest way to use TextMosaic. No setup required. |
+| [Open the 3D product](https://noorrattan.github.io/TextMosaic/) | The finished React interface: type text, run a model, and explore the resulting 3D graph. |
+| [Try the model demo](https://treck001-textmosaic-demo.hf.space) | The direct model interface, useful when you only need the extracted entities and relations. |
 | [Source code](https://github.com/NoorRattan/TextMosaic) | The React frontend, FastAPI service, checkpoints, and deployment files. |
 | [Automated checks](https://github.com/NoorRattan/TextMosaic/actions) | Builds, tests, and the full container smoke test run for every push to `main`. |
 
