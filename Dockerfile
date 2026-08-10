@@ -25,8 +25,8 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 
     && pip install --no-cache-dir --requirement /tmp/requirements-runtime.txt
 
 RUN useradd --system --uid 1000 --create-home appuser \
-    && mkdir --parents /var/cache/nginx /var/log/nginx \
-    && chown --recursive appuser:appuser /var/cache/nginx /var/log/nginx
+    && mkdir --parents /var/cache/nginx /var/log/nginx /var/lib/nginx \
+    && chown --recursive appuser:appuser /var/cache/nginx /var/log/nginx /var/lib/nginx
 
 COPY --chown=appuser:appuser backend /app/backend
 COPY --from=frontend-builder --chown=appuser:appuser /frontend/dist /app/frontend-dist
