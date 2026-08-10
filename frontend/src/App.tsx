@@ -1,6 +1,13 @@
 import { motion, useMotionValue, useScroll, useSpring } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import { extractText, getTiers } from "./api/client";
 import { GraphErrorBoundary } from "./components/GraphErrorBoundary";
@@ -32,7 +39,8 @@ export default function App() {
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTierLoading, setIsTierLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [tierError, setTierError] = useState<string | null>(null);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
   const [signal, setSignal] = useState({ x: 50, y: 45 });
   const cursorX = useMotionValue(-80);
   const cursorY = useMotionValue(-80);
@@ -62,33 +70,74 @@ export default function App() {
     return () => window.removeEventListener("pointermove", updateCursor);
   }, [cursorX, cursorY]);
 
+  const loadTiers = useCallback(async () => {
+    try {
+      const availableTiers = await getTiers();
+      setTiers(availableTiers);
+      if (!availableTiers.some((tier) => tier.name === "balanced")) {
+        setSelectedTier(availableTiers[0]?.name ?? "balanced");
+      }
+    } catch (reason: unknown) {
+      setTiers([]);
+      setTierError(
+        reason instanceof Error
+          ? reason.message
+          : "Model options are unavailable. Please try again shortly.",
+      );
+    } finally {
+      setIsTierLoading(false);
+    }
+  }, []);
+
+  const retryTiers = () => {
+    setIsTierLoading(true);
+    setTierError(null);
+    void loadTiers();
+  };
+
   useEffect(() => {
+    let isCurrent = true;
     void getTiers()
       .then((availableTiers) => {
+        if (!isCurrent) {
+          return;
+        }
         setTiers(availableTiers);
         if (!availableTiers.some((tier) => tier.name === "balanced")) {
           setSelectedTier(availableTiers[0]?.name ?? "balanced");
         }
       })
       .catch((reason: unknown) => {
-        setError(
+        if (!isCurrent) {
+          return;
+        }
+        setTiers([]);
+        setTierError(
           reason instanceof Error
             ? reason.message
-            : "Unable to load model tiers.",
+            : "Model options are unavailable. Please try again shortly.",
         );
       })
       .finally(() => {
-        setIsTierLoading(false);
+        if (isCurrent) {
+          setIsTierLoading(false);
+        }
       });
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const runExtraction = async () => {
-    setError(null);
+    if (isTierLoading || tiers.length === 0) {
+      return;
+    }
+    setExtractionError(null);
     setIsLoading(true);
     try {
       setResult(await extractText(text, selectedTier));
     } catch (reason: unknown) {
-      setError(
+      setExtractionError(
         reason instanceof Error
           ? reason.message
           : "Extraction could not be completed.",
@@ -226,7 +275,8 @@ export default function App() {
           <aside className="control-column">
             <TextInput
               value={text}
-              disabled={isLoading}
+              isLoading={isLoading}
+              canExtract={!isTierLoading && tiers.length > 0}
               onChange={setText}
               onSubmit={() => void runExtraction()}
             />
@@ -234,11 +284,14 @@ export default function App() {
               tiers={tiers}
               selectedTier={selectedTier}
               disabled={isLoading || isTierLoading || tiers.length === 0}
+              isLoading={isTierLoading}
+              error={tierError}
               onChange={setSelectedTier}
+              onRetry={retryTiers}
             />
-            {error ? (
+            {extractionError ? (
               <p className="error-message" role="alert">
-                {error}
+                {extractionError}
               </p>
             ) : null}
           </aside>
@@ -374,11 +427,9 @@ function MagneticLink() {
 function GraphPlaceholder({ message }: { message: string }) {
   return (
     <section className="graph-empty" aria-live="polite">
-      <div className="field-glyph" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
+      <span className="empty-prompt-mark" aria-hidden="true">
+        —
+      </span>
       <p>{message}</p>
     </section>
   );

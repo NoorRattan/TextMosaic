@@ -1,13 +1,15 @@
 interface TextInputProps {
   value: string;
-  disabled: boolean;
+  isLoading: boolean;
+  canExtract: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
 }
 
 export function TextInput({
   value,
-  disabled,
+  isLoading,
+  canExtract,
   onChange,
   onSubmit,
 }: TextInputProps) {
@@ -34,10 +36,14 @@ export function TextInput({
         </p>
         <button
           type="button"
-          disabled={disabled || !value.trim()}
+          disabled={isLoading || !canExtract || !value.trim()}
           onClick={onSubmit}
         >
-          {disabled ? "Extracting…" : "Build knowledge graph"}
+          {isLoading
+            ? "Extracting…"
+            : canExtract
+              ? "Build knowledge graph"
+              : "Model service unavailable"}
         </button>
       </div>
     </section>

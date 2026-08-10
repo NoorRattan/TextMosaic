@@ -7,6 +7,7 @@ import type {
 } from "../types";
 
 const REQUEST_TIMEOUT_MS = 20_000;
+const GRADIO_REQUEST_TIMEOUT_MS = 90_000;
 const TIER_RETRY_DELAYS_MS = [300, 900] as const;
 
 interface ApiExtractResponse {
@@ -25,9 +26,13 @@ interface ApiErrorResponse {
 
 interface RuntimeConfiguration {
   apiBaseUrl?: string;
+  apiTransport?: "rest" | "gradio";
 }
 
 class DeploymentConfigurationError extends Error {}
+
+const SERVICE_UNAVAILABLE_MESSAGE =
+  "The extraction service is unavailable. Please reload the page or try again shortly.";
 
 function getApiBaseUrl(): string {
   const runtimeConfiguration = (
@@ -55,6 +60,23 @@ function getApiBaseUrl(): string {
   );
 }
 
+function getApiTransport(): "rest" | "gradio" {
+  const runtimeConfiguration = (
+    globalThis as typeof globalThis & {
+      __TEXTMOSAIC_CONFIG__?: RuntimeConfiguration;
+    }
+  ).__TEXTMOSAIC_CONFIG__;
+  return (
+    runtimeConfiguration?.apiTransport ??
+    import.meta.env.VITE_API_TRANSPORT ??
+    "rest"
+  );
+}
+
+function getServiceOrigin(): string {
+  return getApiBaseUrl().replace(/\/api$/, "");
+}
+
 function toClientResponse(response: ApiExtractResponse): ExtractResponse {
   // This is the deliberate API boundary. All current fields are single words,
   // so the required snake_case-to-camelCase conversion is a no-op today.
@@ -65,16 +87,16 @@ function toClientResponse(response: ApiExtractResponse): ExtractResponse {
   };
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const apiBaseUrl = getApiBaseUrl();
+async function requestResponse(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<Response> {
   const controller = new AbortController();
-  const timeout = globalThis.setTimeout(
-    () => controller.abort(),
-    REQUEST_TIMEOUT_MS,
-  );
+  const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
   let response: Response;
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, {
+    response = await fetch(url, {
       headers: { "Content-Type": "application/json", ...init?.headers },
       signal: controller.signal,
       ...init,
@@ -87,16 +109,131 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } finally {
     globalThis.clearTimeout(timeout);
   }
+  return response;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await requestResponse(`${getApiBaseUrl()}${path}`, init);
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ApiErrorResponse;
-    throw new Error(
-      body.error?.message ?? `Request failed with status ${response.status}.`,
-    );
+    throw new Error(body.error?.message ?? SERVICE_UNAVAILABLE_MESSAGE);
   }
-  return (await response.json()) as T;
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+}
+
+async function requestGradio<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await requestResponse(
+    `${getServiceOrigin()}${path}`,
+    init,
+    GRADIO_REQUEST_TIMEOUT_MS,
+  );
+  if (!response.ok) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+}
+
+const GRADIO_TIER_DESCRIPTIONS: Record<TierName, string> = {
+  speed: "Fastest, lowest accuracy",
+  balanced: "Default — a middle ground",
+  accuracy: "Slowest, highest accuracy",
+};
+
+interface GradioInfoResponse {
+  named_endpoints?: {
+    "/extract"?: {
+      parameters?: Array<{
+        parameter_name?: string;
+        type?: { enum?: string[] };
+      }>;
+    };
+  };
+}
+
+interface GradioCallResponse {
+  event_id?: string;
+}
+
+function isTierName(value: string): value is TierName {
+  return value === "speed" || value === "balanced" || value === "accuracy";
+}
+
+async function getGradioTiers(): Promise<TierInfo[]> {
+  const info = await requestGradio<GradioInfoResponse>("/gradio_api/info");
+  const values = info.named_endpoints?.["/extract"]?.parameters?.find(
+    (parameter) => parameter.parameter_name === "tier",
+  )?.type?.enum;
+  const tierNames = values?.filter(isTierName) ?? [];
+  if (tierNames.length === 0) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  return tierNames.map((name) => ({
+    name,
+    description: GRADIO_TIER_DESCRIPTIONS[name],
+  }));
+}
+
+async function extractWithGradio(
+  text: string,
+  tier: TierName,
+): Promise<ExtractResponse> {
+  const call = await requestGradio<GradioCallResponse>(
+    "/gradio_api/call/v2/extract",
+    {
+      method: "POST",
+      body: JSON.stringify({ text, tier }),
+    },
+  );
+  if (!call.event_id) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  const response = await requestResponse(
+    `${getServiceOrigin()}/gradio_api/call/extract/${encodeURIComponent(call.event_id)}`,
+    undefined,
+    GRADIO_REQUEST_TIMEOUT_MS,
+  );
+  if (!response.ok) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  const completeEvent = (await response.text())
+    .split("\n\n")
+    .find((event) => event.includes("event: complete"));
+  const data = completeEvent
+    ?.split("\n")
+    .filter((line) => line.startsWith("data: "))
+    .map((line) => line.slice("data: ".length))
+    .join("\n");
+  if (!data) {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
+  try {
+    const outputs = JSON.parse(data) as unknown[];
+    return toClientResponse(outputs[0] as ApiExtractResponse);
+  } catch {
+    throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
+  }
 }
 
 export async function getTiers(): Promise<TierInfo[]> {
+  if (getApiTransport() === "gradio") {
+    return getGradioTiers();
+  }
   let lastError: Error | undefined;
   for (const delay of [...TIER_RETRY_DELAYS_MS, 0]) {
     if (delay > 0) {
@@ -121,6 +258,9 @@ export async function extractText(
   text: string,
   tier: TierName,
 ): Promise<ExtractResponse> {
+  if (getApiTransport() === "gradio") {
+    return extractWithGradio(text, tier);
+  }
   const response = await request<ApiExtractResponse>("/extract", {
     method: "POST",
     body: JSON.stringify({ text, tier }),
