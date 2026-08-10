@@ -131,6 +131,14 @@ def test_untrusted_host_is_rejected() -> None:
     assert response.status_code == 400
 
 
+def test_configured_hugging_face_space_host_is_allowed() -> None:
+    client = TestClient(create_app(FakeExtractionService()))
+
+    response = client.get("/health", headers={"host": "noorrattan-textmosaic.hf.space"})
+
+    assert response.status_code == 200
+
+
 def test_rate_limiter_blocks_the_next_request_after_its_limit() -> None:
     limiter = InMemoryRateLimiter(limit=2, window_seconds=60)
 

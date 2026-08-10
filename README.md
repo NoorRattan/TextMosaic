@@ -48,7 +48,24 @@ npm run dev -- --host 127.0.0.1
 
 Open `http://localhost:5173`. The frontend calls `http://localhost:7860`; the backend health endpoint is `http://localhost:7860/health`.
 
-For a deployed frontend, set `VITE_API_BASE_URL` at build time to the public FastAPI URL and add the exact frontend origin to the backend's `ALLOWED_ORIGINS` allow-list. The value is public configuration, not a secret.
+## Deploy
+
+The frontend API address is runtime configuration, not a Docker build argument. Before starting the two public services, configure these exact values in the hosting platform's environment-variable UI:
+
+```text
+# Backend service (the current Hugging Face Space host)
+ALLOWED_HOSTS=noorrattan-textmosaic.hf.space
+
+# Also include the exact public frontend origin; never use *.
+ALLOWED_ORIGINS=https://YOUR_FRONTEND_DOMAIN
+
+# Frontend container: public backend URL, with https.
+VITE_API_BASE_URL=https://noorrattan-textmosaic.hf.space
+```
+
+The frontend image writes `runtime-config.js` when its container starts, so changing `VITE_API_BASE_URL` requires a frontend restart/redeploy but **not** an image rebuild. The application shows a configuration error instead of silently calling a visitor's localhost when this value is absent on a non-local site.
+
+If the Space domain changes, update both `ALLOWED_HOSTS` and `VITE_API_BASE_URL`, then update `ALLOWED_ORIGINS` with the real frontend origin. These values are public configuration, not secrets.
 
 ## API
 

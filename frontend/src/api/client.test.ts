@@ -4,6 +4,8 @@ import { getTiers, toClientResponse } from "./client";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  delete (globalThis as typeof globalThis & { __TEXTMOSAIC_CONFIG__?: object })
+    .__TEXTMOSAIC_CONFIG__;
 });
 
 describe("toClientResponse", () => {
@@ -47,6 +49,27 @@ describe("toClientResponse", () => {
       expect.objectContaining({
         headers: { "Content-Type": "application/json" },
       }),
+    );
+  });
+
+  it("uses runtime container configuration instead of a compile-time API URL", async () => {
+    (
+      globalThis as typeof globalThis & {
+        __TEXTMOSAIC_CONFIG__?: { apiBaseUrl: string };
+      }
+    ).__TEXTMOSAIC_CONFIG__ = { apiBaseUrl: "https://api.example.test/" };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ tiers: [] }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getTiers();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/tiers",
+      expect.any(Object),
     );
   });
 });

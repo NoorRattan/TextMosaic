@@ -6,9 +6,6 @@ import type {
   TierName,
 } from "../types";
 
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ??
-  "http://127.0.0.1:7860";
 const REQUEST_TIMEOUT_MS = 20_000;
 const TIER_RETRY_DELAYS_MS = [300, 900] as const;
 
@@ -26,6 +23,38 @@ interface ApiErrorResponse {
   error?: { message?: string };
 }
 
+interface RuntimeConfiguration {
+  apiBaseUrl?: string;
+}
+
+class DeploymentConfigurationError extends Error {}
+
+function getApiBaseUrl(): string {
+  const runtimeConfiguration = (
+    globalThis as typeof globalThis & {
+      __TEXTMOSAIC_CONFIG__?: RuntimeConfiguration;
+    }
+  ).__TEXTMOSAIC_CONFIG__;
+  const configuredUrl =
+    runtimeConfiguration?.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL;
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  const hostname = globalThis.location?.hostname;
+  if (
+    hostname === undefined ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
+    return "http://127.0.0.1:7860";
+  }
+  throw new DeploymentConfigurationError(
+    "This deployment is missing VITE_API_BASE_URL. Set the frontend container environment variable to the public API URL.",
+  );
+}
+
 function toClientResponse(response: ApiExtractResponse): ExtractResponse {
   // This is the deliberate API boundary. All current fields are single words,
   // so the required snake_case-to-camelCase conversion is a no-op today.
@@ -37,6 +66,7 @@ function toClientResponse(response: ApiExtractResponse): ExtractResponse {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const apiBaseUrl = getApiBaseUrl();
   const controller = new AbortController();
   const timeout = globalThis.setTimeout(
     () => controller.abort(),
@@ -75,6 +105,9 @@ export async function getTiers(): Promise<TierInfo[]> {
     try {
       return (await request<ApiTierResponse>("/tiers")).tiers;
     } catch (error) {
+      if (error instanceof DeploymentConfigurationError) {
+        throw error;
+      }
       lastError =
         error instanceof Error
           ? error
