@@ -131,10 +131,10 @@ def test_untrusted_host_is_rejected() -> None:
     assert response.status_code == 400
 
 
-def test_configured_hugging_face_space_host_is_allowed() -> None:
+def test_default_test_host_is_allowed() -> None:
     client = TestClient(create_app(FakeExtractionService()))
 
-    response = client.get("/health", headers={"host": "noorrattan-textmosaic.hf.space"})
+    response = client.get("/health", headers={"host": "testserver"})
 
     assert response.status_code == 200
 
@@ -145,3 +145,31 @@ def test_rate_limiter_blocks_the_next_request_after_its_limit() -> None:
     assert limiter.allow("127.0.0.1")
     assert limiter.allow("127.0.0.1")
     assert not limiter.allow("127.0.0.1")
+
+
+def test_rate_limiter_uses_the_forwarded_visitor_address_behind_nginx() -> None:
+    client = TestClient(create_app(FakeExtractionService(), trust_proxy_headers=True))
+
+    first_visitor = {"x-forwarded-for": "198.51.100.10, 127.0.0.1"}
+    second_visitor = {"x-forwarded-for": "198.51.100.11, 127.0.0.1"}
+    for _ in range(30):
+        response = client.post(
+            "/extract",
+            json={"text": "Ada joined Acme."},
+            headers=first_visitor,
+        )
+        assert response.status_code == 200
+
+    first_blocked = client.post(
+        "/extract",
+        json={"text": "Ada joined Acme."},
+        headers=first_visitor,
+    )
+    second_allowed = client.post(
+        "/extract",
+        json={"text": "Ada joined Acme."},
+        headers=second_visitor,
+    )
+
+    assert first_blocked.status_code == 429
+    assert second_allowed.status_code == 200

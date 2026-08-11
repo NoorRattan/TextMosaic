@@ -83,7 +83,10 @@ class RequestBodyLimitMiddleware:
         await self.app(scope, receive_buffered, send)
 
 
-def create_app(service: ExtractionService | None = None) -> FastAPI:
+def create_app(
+    service: ExtractionService | None = None,
+    trust_proxy_headers: bool = TRUST_PROXY_HEADERS,
+) -> FastAPI:
     """Create the application with test-injectable extraction behavior."""
     app = FastAPI(title="TextMosaic", version="1.0.0", docs_url=None, redoc_url=None)
     origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
@@ -120,7 +123,7 @@ def create_app(service: ExtractionService | None = None) -> FastAPI:
             message = str(error.detail)
         return _error_response(error.status_code, code, message)
 
-    app.include_router(create_router(service))
+    app.include_router(create_router(service, trust_proxy_headers=trust_proxy_headers))
     return app
 
 

@@ -17,7 +17,10 @@ from backend.api.schemas import (
     TierInfo,
     TierResponse,
 )
-from backend.config import MODEL_TIER_DEFAULT as _DEFAULT_TIER_VALUE
+from backend.config import (
+    MODEL_TIER_DEFAULT as _DEFAULT_TIER_VALUE,
+    TRUST_PROXY_HEADERS as _TRUST_PROXY_HEADERS,
+)
 from backend.model.inference import CheckpointError, InferenceEngine
 from backend.model.tiers import TIER_CONFIGS, TierName
 
@@ -73,14 +76,20 @@ class InMemoryRateLimiter:
             return True
 
 
-def _client_id(request: Request) -> str:
-    """Use the direct peer address; proxy headers remain untrusted by default."""
+def _client_id(request: Request, trust_proxy_headers: bool = False) -> str:
+    """Resolve the visitor address when a trusted reverse proxy preserves it."""
+    if trust_proxy_headers:
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        client_ip = forwarded_for.split(",", maxsplit=1)[0].strip()
+        if client_ip:
+            return client_ip
     return request.client.host if request.client is not None else "unknown"
 
 
 def create_router(
     service: ExtractionService | None = None,
     limiter: InMemoryRateLimiter | None = None,
+    trust_proxy_headers: bool = _TRUST_PROXY_HEADERS,
 ) -> APIRouter:
     """Create an injectable router for production and endpoint tests."""
     extraction_service = service or CheckpointExtractionService()
@@ -99,7 +108,7 @@ def create_router(
 
     @router.post("/extract", response_model=ExtractResponse)
     def extract(payload: ExtractRequest, request: Request) -> ExtractResponse:
-        if not request_limiter.allow(_client_id(request)):
+        if not request_limiter.allow(_client_id(request, trust_proxy_headers)):
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail={"code": "rate_limited", "message": "Too many extraction requests."},

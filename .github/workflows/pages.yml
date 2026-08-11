@@ -32,11 +32,23 @@ jobs:
       - run: npm run build:pages
         working-directory: frontend
         env:
-          VITE_API_BASE_URL: https://treck001-textmosaic-demo.hf.space/api
-          VITE_API_TRANSPORT: gradio
+          VITE_API_BASE_URL: ${{ vars.TEXTMOSAIC_API_BASE_URL || 'https://treck001-textmosaic-demo.hf.space/api' }}
+          VITE_API_TRANSPORT: ${{ vars.TEXTMOSAIC_API_TRANSPORT || 'gradio' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: frontend/dist
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Smoke deployed Pages
+        run: |
+          for attempt in $(seq 1 20); do
+            curl --fail --silent --show-error "${{ steps.deployment.outputs.page_url }}" | grep --fixed-strings '<div id="root"></div>' && exit 0
+            sleep 3
+          done
+          exit 1
+      - name: Smoke configured public API
+        if: ${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN != '' }}
+        run: |
+          curl --fail --silent --show-error "${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN }}/health"
+          curl --fail --silent --show-error "${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN }}/api/tiers"

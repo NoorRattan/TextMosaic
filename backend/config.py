@@ -47,8 +47,14 @@ TEXTMOSAIC_DATA_DIR: Final[str] = os.getenv("TEXTMOSAIC_DATA_DIR", "./data")
 ALLOWED_ORIGINS: Final[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 ALLOWED_HOSTS: Final[str] = os.getenv(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,testserver,noorrattan-textmosaic.hf.space",
+    "localhost,127.0.0.1,testserver",
 )
+TRUST_PROXY_HEADERS: Final[bool] = os.getenv("TRUST_PROXY_HEADERS", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 MODEL_TIER_DEFAULT: Final[str] = os.getenv("MODEL_TIER_DEFAULT", "balanced")
 
 try:

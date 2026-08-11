@@ -126,6 +126,21 @@ The frontend image writes `runtime-config.js` when its container starts, so chan
 
 If the Space domain changes, update both `ALLOWED_HOSTS` and `VITE_API_BASE_URL`, then update `ALLOWED_ORIGINS` with the real frontend origin. These values are public configuration, not secrets.
 
+### GitHub Pages release configuration
+
+The product must target one canonical backend. For the combined Docker Space,
+set these **GitHub repository variables** before deploying Pages:
+
+```text
+TEXTMOSAIC_API_BASE_URL=https://YOUR-DOCKER-SPACE.hf.space/api
+TEXTMOSAIC_API_TRANSPORT=rest
+TEXTMOSAIC_PUBLIC_API_ORIGIN=https://YOUR-DOCKER-SPACE.hf.space
+```
+
+The Pages workflow then smoke-tests both the public page and the API. The
+legacy Gradio demo remains the fallback only while these variables are absent;
+do not treat it as the deployment of this repository's Docker application.
+
 ## API
 
 `POST /extract` accepts text and an optional tier. `GET /tiers` reads the available tiers from the backend configuration, and `GET /health` is a minimal liveness endpoint.
