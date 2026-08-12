@@ -17,10 +17,8 @@ from backend.api.schemas import (
     TierInfo,
     TierResponse,
 )
-from backend.config import (
-    MODEL_TIER_DEFAULT as _DEFAULT_TIER_VALUE,
-    TRUST_PROXY_HEADERS as _TRUST_PROXY_HEADERS,
-)
+from backend.config import MODEL_TIER_DEFAULT as _DEFAULT_TIER_VALUE
+from backend.config import TRUST_PROXY_HEADERS as _TRUST_PROXY_HEADERS
 from backend.model.inference import CheckpointError, InferenceEngine
 from backend.model.tiers import TIER_CONFIGS, TierName
 
