@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from backend.api.routes import ExtractionService, create_router
-from backend.config import ALLOWED_HOSTS, ALLOWED_ORIGINS, MAX_REQUEST_BODY_BYTES
+from backend.config import ALLOWED_HOSTS, ALLOWED_ORIGINS, MAX_REQUEST_BODY_BYTES, TRUST_PROXY_HEADERS
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
