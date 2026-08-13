@@ -127,7 +127,11 @@ export default function App() {
         <div className="paper-noise" aria-hidden="true" />
         <nav className="masthead" aria-label="Primary navigation">
           <a className="wordmark" href="#top" aria-label="TextMosaic home">
-            <span className="wordmark-glyph">T</span>
+            <span className="wordmark-glyph" aria-hidden="true">
+              <svg viewBox="0 0 32 32">
+                <path d="M5 5h9v9H5zM18 5h9v9h-9zM5 18h9v9H5zM18 18h9v9h-9z" />
+              </svg>
+            </span>
             <span>TextMosaic</span>
           </a>
           <div className="masthead-note">Neural extraction / 01–06</div>
@@ -141,6 +145,11 @@ export default function App() {
                   : "Switch to dark mode"
               }
               aria-pressed={theme === "light"}
+              title={
+                theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
               onClick={() =>
                 setTheme((currentTheme) =>
                   currentTheme === "dark" ? "light" : "dark",
@@ -149,6 +158,7 @@ export default function App() {
             >
               <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
               <span>{theme === "dark" ? "Light" : "Dark"}</span>
+              <ThemeGlyph theme={theme} />
             </button>
             <a className="masthead-link" href="#studio">
               Open the studio <span aria-hidden="true">↘</span>
@@ -395,6 +405,19 @@ function MagneticLink() {
       <span>Open extraction studio</span>
       <b aria-hidden="true">↘</b>
     </motion.a>
+  );
+}
+
+function ThemeGlyph({ theme }: { theme: Theme }) {
+  return theme === "dark" ? (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.25" />
+      <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4M18.7 18.7l-1.4-1.4M6.7 6.7 5.3 5.3" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.1 14.5A8.2 8.2 0 0 1 9.5 3.9a8.2 8.2 0 1 0 10.6 10.6Z" />
+    </svg>
   );
 }
 

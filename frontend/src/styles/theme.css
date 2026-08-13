@@ -129,13 +129,17 @@ a:focus-visible {
 .wordmark-glyph {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50% 50% 42% 50%;
-  border: 1px solid rgba(240, 233, 220, 0.5);
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.7rem 0.22rem 0.7rem 0.7rem;
+  border: 1px solid rgba(214, 223, 148, 0.55);
+  background: rgba(214, 223, 148, 0.08);
   color: #d6df94;
-  font-family: "Instrument Serif", serif;
-  font-size: 1.25rem;
+}
+.wordmark-glyph svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: currentColor;
 }
 .masthead-note {
   color: rgba(240, 233, 220, 0.54);
@@ -153,30 +157,39 @@ a:focus-visible {
   gap: 1rem;
 }
 .theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  padding: 0.45rem 0.66rem;
-  border: 1px solid rgba(240, 233, 220, 0.34);
-  border-radius: 99px;
-  background: rgba(240, 233, 220, 0.07);
-  color: #f3eddf;
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: 1px solid rgba(214, 223, 148, 0.45);
+  border-radius: 0.68rem 0.2rem 0.68rem 0.68rem;
+  background: rgba(214, 223, 148, 0.08);
+  color: #d6df94;
   box-shadow: none;
-  font-family: "DM Mono", monospace;
-  font-size: 0.61rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 .theme-toggle:hover {
   border-color: #d6df94;
-  background: rgba(214, 223, 148, 0.14);
-  color: #d6df94;
+  background: #d6df94;
+  color: #18312c;
   box-shadow: none;
   transform: none;
 }
-.theme-toggle span:first-child {
-  font-size: 0.88rem;
-  line-height: 0.7;
+.theme-toggle > span {
+  display: none;
+}
+.theme-toggle svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.65;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.theme-toggle:hover svg {
+  transform: rotate(30deg) scale(1.08);
 }
 .masthead-link:hover {
   color: #f3eddf;
@@ -1051,6 +1064,124 @@ button:disabled {
   color: rgba(240, 233, 220, 0.5);
   font-size: 0.8rem;
   line-height: 1.55;
+}
+
+.site-shell,
+.hero-stage,
+.conflict-section,
+.studio-section,
+.mosaic-section,
+.closing-section,
+.graph-panel,
+.input-panel,
+.local-model-note,
+textarea,
+.mosaic-piece,
+.relation-piece,
+.evidence-ribbon,
+.theme-toggle,
+.wordmark-glyph,
+.concept-list,
+.concept-detail,
+.relation-list,
+.relation-list li {
+  transition:
+    background-color 0.52s ease,
+    color 0.38s ease,
+    border-color 0.42s ease,
+    box-shadow 0.52s ease;
+}
+
+html:not([data-theme="light"]) .site-shell,
+html[data-theme="dark"] .site-shell {
+  background: #10201d;
+  color: #eaf0e9;
+}
+html:not([data-theme="light"]) .conflict-section,
+html[data-theme="dark"] .conflict-section {
+  background: #19312c;
+  color: #eaf0e9;
+}
+html:not([data-theme="light"]) .studio-section,
+html[data-theme="dark"] .studio-section {
+  background: #10201d;
+  color: #eaf0e9;
+}
+html:not([data-theme="light"]) .conflict-grid h2 em,
+html[data-theme="dark"] .conflict-grid h2 em {
+  color: #f29a78;
+}
+html:not([data-theme="light"]) .conflict-copy,
+html:not([data-theme="light"]) .studio-heading > p:last-child,
+html:not([data-theme="light"]) .character-count,
+html:not([data-theme="light"]) .input-footer p,
+html[data-theme="dark"] .conflict-copy,
+html[data-theme="dark"] .studio-heading > p:last-child,
+html[data-theme="dark"] .character-count,
+html[data-theme="dark"] .input-footer p {
+  color: rgba(234, 240, 233, 0.66);
+}
+html:not([data-theme="light"]) .focus-rule,
+html[data-theme="dark"] .focus-rule {
+  border-color: rgba(234, 240, 233, 0.3);
+}
+html:not([data-theme="light"]) .input-panel,
+html[data-theme="dark"] .input-panel {
+  border-color: rgba(214, 223, 148, 0.24);
+  background: #18312c;
+  box-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.2);
+}
+html:not([data-theme="light"]) textarea,
+html[data-theme="dark"] textarea {
+  border-color: rgba(234, 240, 233, 0.2);
+  background: #10201d;
+  color: #eaf0e9;
+}
+html:not([data-theme="light"]) textarea:focus,
+html[data-theme="dark"] textarea:focus {
+  border-color: #d6df94;
+  background: #142924;
+}
+html:not([data-theme="light"]) textarea::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: rgba(234, 240, 233, 0.44);
+}
+html:not([data-theme="light"]) .local-model-note,
+html[data-theme="dark"] .local-model-note {
+  border-color: rgba(214, 223, 148, 0.3);
+  background: #243f37;
+  box-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.18);
+}
+html:not([data-theme="light"]) .graph-panel,
+html[data-theme="dark"] .graph-panel {
+  background: #142924;
+  box-shadow: 0 1.8rem 3.5rem rgba(0, 0, 0, 0.28);
+}
+html:not([data-theme="light"]) .mosaic-section,
+html[data-theme="dark"] .mosaic-section {
+  background: #542d2a;
+}
+html:not([data-theme="light"]) .mosaic-piece,
+html[data-theme="dark"] .mosaic-piece {
+  border-color: rgba(248, 233, 213, 0.27);
+  background: rgba(16, 32, 29, 0.44);
+  box-shadow: 0 0.9rem 0 rgba(0, 0, 0, 0.2);
+}
+html:not([data-theme="light"]) .mosaic-piece:hover,
+html[data-theme="dark"] .mosaic-piece:hover {
+  background: rgba(16, 32, 29, 0.7);
+}
+html:not([data-theme="light"]) .relation-piece,
+html[data-theme="dark"] .relation-piece {
+  background: #142924;
+}
+html:not([data-theme="light"]) .evidence-ribbon,
+html[data-theme="dark"] .evidence-ribbon {
+  background: #bfc978;
+}
+html:not([data-theme="light"]) .closing-section,
+html[data-theme="dark"] .closing-section {
+  background: #0d1917;
 }
 
 html[data-theme="light"] {
