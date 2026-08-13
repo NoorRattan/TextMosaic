@@ -102,6 +102,57 @@ function ConceptDetail({ concept }: { concept: GraphNode }) {
   );
 }
 
+function SingleRelationMap({
+  relation,
+  nodes,
+  onSelect,
+}: {
+  relation: GraphLink;
+  nodes: GraphNode[];
+  onSelect: (id: string) => void;
+}) {
+  const source = nodes.find((node) => node.id === relation.source);
+  const target = nodes.find((node) => node.id === relation.target);
+  if (!source || !target) return null;
+
+  return (
+    <div className="single-relation-map" aria-label="Directed relationship map">
+      <p className="single-map-kicker">Verified relationship</p>
+      <div className="single-map-route">
+        <button
+          className="single-map-node"
+          type="button"
+          onClick={() => onSelect(source.id)}
+        >
+          <i style={{ background: source.color }} />
+          <span>{source.label}</span>
+          <small>{source.kind}</small>
+        </button>
+        <div
+          className="single-map-edge"
+          aria-label={`${source.label} ${relation.label} ${target.label}`}
+        >
+          <span>{relation.label}</span>
+          <i aria-hidden="true">→</i>
+        </div>
+        <button
+          className="single-map-node"
+          type="button"
+          onClick={() => onSelect(target.id)}
+        >
+          <i style={{ background: target.color }} />
+          <span>{target.label}</span>
+          <small>{target.kind}</small>
+        </button>
+      </div>
+      <p className="single-map-evidence">
+        <span>Source evidence</span>
+        {relation.evidence[0]?.quote}
+      </p>
+    </div>
+  );
+}
+
 export default function GraphView({ result }: GraphViewProps) {
   const graphData = useMemo(() => toGraphData(result), [result]);
   const graphRef =
@@ -137,28 +188,36 @@ export default function GraphView({ result }: GraphViewProps) {
         </span>
         <p>{result.analysis.notice}</p>
       </div>
-      <div className="graph-canvas" aria-label="Interactive 3D concept graph">
-        <ForceGraph3D
-          ref={graphRef}
-          graphData={graphData}
-          backgroundColor="#0B0F14"
-          nodeLabel={(node) => {
-            const concept = node as GraphNode;
-            return `<strong>${escapeHtml(concept.label)}</strong><br/>${escapeHtml(concept.kind)}`;
-          }}
-          nodeColor={(node) => (node as GraphNode).color}
-          nodeRelSize={5}
-          nodeThreeObject={nodeLabelObject}
-          nodeThreeObjectExtend
-          onNodeClick={(node) => setSelectedId((node as GraphNode).id)}
-          linkColor={() => "#FB7185"}
-          linkWidth={1.8}
-          linkDirectionalArrowLength={3.5}
-          linkDirectionalArrowRelPos={1}
-          linkLabel={(link) => escapeHtml((link as GraphLink).label)}
-          onEngineStop={() => graphRef.current?.zoomToFit(420, 84)}
-          showNavInfo={false}
-        />
+      <div className="graph-canvas" aria-label="Interactive concept graph">
+        {graphData.links.length === 1 ? (
+          <SingleRelationMap
+            relation={graphData.links[0]}
+            nodes={graphData.nodes}
+            onSelect={setSelectedId}
+          />
+        ) : (
+          <ForceGraph3D
+            ref={graphRef}
+            graphData={graphData}
+            backgroundColor="#0B0F14"
+            nodeLabel={(node) => {
+              const concept = node as GraphNode;
+              return `<strong>${escapeHtml(concept.label)}</strong><br/>${escapeHtml(concept.kind)}`;
+            }}
+            nodeColor={(node) => (node as GraphNode).color}
+            nodeRelSize={5}
+            nodeThreeObject={nodeLabelObject}
+            nodeThreeObjectExtend
+            onNodeClick={(node) => setSelectedId((node as GraphNode).id)}
+            linkColor={() => "#FB7185"}
+            linkWidth={1.8}
+            linkDirectionalArrowLength={3.5}
+            linkDirectionalArrowRelPos={1}
+            linkLabel={(link) => escapeHtml((link as GraphLink).label)}
+            onEngineStop={() => graphRef.current?.zoomToFit(420, 84)}
+            showNavInfo={false}
+          />
+        )}
         <p className="graph-canvas-caption">
           <span>{graphData.nodes.length} extracted concepts</span>
           <span>Drag to explore · click a concept for its evidence</span>

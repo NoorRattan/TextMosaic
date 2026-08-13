@@ -806,6 +806,120 @@ button:disabled {
 .graph-canvas-caption span:first-child {
   color: #d6df94;
 }
+.single-relation-map {
+  display: grid;
+  min-height: 100%;
+  align-content: center;
+  gap: clamp(1.4rem, 4vw, 2.6rem);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  background:
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(45, 212, 191, 0.12),
+      transparent 17rem
+    ),
+    linear-gradient(145deg, rgba(18, 42, 37, 0.97), rgba(7, 15, 20, 0.98));
+}
+.single-map-kicker {
+  margin: 0;
+  color: #d6df94;
+  font-family: "DM Mono", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.11em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.single-map-route {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(5rem, 0.52fr) minmax(
+      7rem,
+      1fr
+    );
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+}
+.single-map-node {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.25rem 0.55rem;
+  min-height: 7.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(234, 240, 233, 0.26);
+  border-radius: 1rem;
+  background: rgba(12, 32, 29, 0.9);
+  color: #f3eddf;
+  box-shadow: 0 0.6rem 1.4rem rgba(0, 0, 0, 0.16);
+  text-align: left;
+}
+.single-map-node:hover {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 0.9rem 1.6rem rgba(0, 0, 0, 0.22);
+}
+.single-map-node > i {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.3rem;
+  border-radius: 50%;
+}
+.single-map-node span {
+  overflow: hidden;
+  font-size: clamp(0.9rem, 1.7vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+}
+.single-map-node small {
+  grid-column: 2;
+  color: rgba(234, 240, 233, 0.54);
+  font-family: "DM Mono", monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.single-map-edge {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  color: #f3eddf;
+}
+.single-map-edge span {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  border-radius: 99px;
+  color: #fbbf24;
+  font-family: "DM Mono", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.single-map-edge i {
+  display: block;
+  width: 100%;
+  color: #2dd4bf;
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(2.3rem, 5vw, 4.4rem);
+  font-style: normal;
+  line-height: 0.6;
+  text-align: center;
+}
+.single-map-evidence {
+  max-width: 42rem;
+  margin: 0 auto;
+  color: rgba(234, 240, 233, 0.66);
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(1rem, 1.7vw, 1.3rem);
+  line-height: 1.2;
+  text-align: center;
+}
+.single-map-evidence span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: rgba(214, 223, 148, 0.72);
+  font-family: "DM Mono", monospace;
+  font-size: 0.53rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .map-inspector {
   display: grid;
   grid-template-columns: minmax(9rem, 0.72fr) minmax(0, 1.28fr);
@@ -1506,6 +1620,21 @@ html[data-theme="light"] .magnetic-link {
   }
   .mosaic-header {
     gap: 1rem;
+  }
+  .single-map-route {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  .single-map-node {
+    min-height: 5rem;
+  }
+  .single-map-edge {
+    grid-template-columns: auto auto;
+    gap: 0.7rem;
+  }
+  .single-map-edge i {
+    width: auto;
+    transform: rotate(90deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {
