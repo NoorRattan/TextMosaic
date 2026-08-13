@@ -1159,29 +1159,53 @@ html[data-theme="dark"] .graph-panel {
 }
 html:not([data-theme="light"]) .mosaic-section,
 html[data-theme="dark"] .mosaic-section {
-  background: #542d2a;
+  background:
+    radial-gradient(
+      circle at 8% 16%,
+      rgba(214, 223, 148, 0.1),
+      transparent 22rem
+    ),
+    radial-gradient(
+      circle at 88% 78%,
+      rgba(232, 123, 86, 0.1),
+      transparent 28rem
+    ),
+    #132824;
 }
 html:not([data-theme="light"]) .mosaic-piece,
 html[data-theme="dark"] .mosaic-piece {
-  border-color: rgba(248, 233, 213, 0.27);
-  background: rgba(16, 32, 29, 0.44);
+  border-color: rgba(214, 223, 148, 0.22);
+  background: rgba(25, 49, 44, 0.82);
   box-shadow: 0 0.9rem 0 rgba(0, 0, 0, 0.2);
 }
 html:not([data-theme="light"]) .mosaic-piece:hover,
 html[data-theme="dark"] .mosaic-piece:hover {
-  background: rgba(16, 32, 29, 0.7);
+  background: #25443b;
 }
 html:not([data-theme="light"]) .relation-piece,
 html[data-theme="dark"] .relation-piece {
-  background: #142924;
+  background: #0e211d;
 }
 html:not([data-theme="light"]) .evidence-ribbon,
 html[data-theme="dark"] .evidence-ribbon {
-  background: #bfc978;
+  border-top: 1px solid rgba(214, 223, 148, 0.3);
+  border-bottom: 1px solid rgba(214, 223, 148, 0.3);
+  background: #0d1917;
+  color: #dfe9de;
+}
+html:not([data-theme="light"]) .ribbon-track i,
+html[data-theme="dark"] .ribbon-track i {
+  color: #d6df94;
 }
 html:not([data-theme="light"]) .closing-section,
 html[data-theme="dark"] .closing-section {
-  background: #0d1917;
+  background:
+    radial-gradient(
+      circle at 50% -30%,
+      rgba(214, 223, 148, 0.1),
+      transparent 34rem
+    ),
+    #0d1917;
 }
 
 html[data-theme="light"] {
