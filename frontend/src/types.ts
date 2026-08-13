@@ -1,7 +1,5 @@
 export type EntityType = "Peop" | "Org" | "Loc" | "Other";
 export type RelationType = string;
-export type TierName = "speed" | "balanced" | "accuracy";
-export type AnalysisMode = "document" | "extractor";
 
 export interface Entity {
   type: EntityType;
@@ -50,9 +48,4 @@ export interface ExtractResponse {
   concepts: Concept[];
   graphRelations: GraphRelation[];
   analysis: AnalysisMetadata;
-}
-
-export interface TierInfo {
-  name: TierName;
-  description: string;
 }

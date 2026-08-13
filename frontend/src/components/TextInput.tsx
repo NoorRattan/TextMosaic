@@ -34,7 +34,7 @@ export function TextInput({
       <div className="input-footer">
         <p>
           Each map keeps its source evidence visible. The bundled model reads
-          your text locally; no third-party AI or model API is used.
+          your text inside this browser; no server or model API is used.
         </p>
         <button
           type="button"
@@ -42,7 +42,7 @@ export function TextInput({
           onClick={onSubmit}
         >
           {isLoading
-            ? "Extracting..."
+            ? "Running local model..."
             : canExtract
               ? "Build knowledge graph"
               : "Model service unavailable"}

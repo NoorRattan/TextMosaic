@@ -31,8 +31,6 @@ jobs:
         working-directory: frontend
       - run: npm run build:pages
         working-directory: frontend
-        env:
-          VITE_API_BASE_URL: ${{ vars.TEXTMOSAIC_API_BASE_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
@@ -46,8 +44,3 @@ jobs:
             sleep 3
           done
           exit 1
-      - name: Smoke configured public API
-        if: ${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN != '' }}
-        run: |
-          curl --fail --silent --show-error "${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN }}/health"
-          curl --fail --silent --show-error "${{ vars.TEXTMOSAIC_PUBLIC_API_ORIGIN }}/api/tiers"

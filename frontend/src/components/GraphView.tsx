@@ -36,8 +36,8 @@ function toGraphData(result: ExtractResponse): {
 
 function modelSignalLabel(confidence: number): string {
   if (confidence >= 0.8) return "named-entity signal";
-  if (confidence >= 0.55) return "parser signal";
-  return "relation-model signal";
+  if (confidence >= 0.55) return "local graph signal";
+  return "local relationship signal";
 }
 
 function ConceptDetail({ concept }: { concept: GraphNode }) {

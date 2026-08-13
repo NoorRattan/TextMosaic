@@ -1,25 +1,11 @@
 import { motion, useMotionValue, useScroll, useSpring } from "framer-motion";
 import type { Variants } from "framer-motion";
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useState,
-  type CSSProperties,
-} from "react";
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 
-import { extractText, getTiers } from "./api/client";
+import { extractText } from "./api/client";
 import { GraphErrorBoundary } from "./components/GraphErrorBoundary";
-import { AnalysisModeSelector } from "./components/AnalysisModeSelector";
 import { TextInput } from "./components/TextInput";
-import { TierSelector } from "./components/TierSelector";
-import type {
-  AnalysisMode,
-  ExtractResponse,
-  TierInfo,
-  TierName,
-} from "./types";
+import type { ExtractResponse } from "./types";
 
 const initialText =
   "Havana Radio Reloj Network broadcast the interview from Cuba.";
@@ -40,14 +26,10 @@ const reveal: Variants = {
 
 export default function App() {
   const [text, setText] = useState(initialText);
-  const [tiers, setTiers] = useState<TierInfo[]>([]);
-  const [selectedTier, setSelectedTier] = useState<TierName>("balanced");
-  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("document");
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTierLoading, setIsTierLoading] = useState(true);
-  const [tierError, setTierError] = useState<string | null>(null);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [signal, setSignal] = useState({ x: 50, y: 45 });
   const cursorX = useMotionValue(-80);
   const cursorY = useMotionValue(-80);
@@ -77,72 +59,12 @@ export default function App() {
     return () => window.removeEventListener("pointermove", updateCursor);
   }, [cursorX, cursorY]);
 
-  const loadTiers = useCallback(async () => {
-    try {
-      const availableTiers = await getTiers();
-      setTiers(availableTiers);
-      if (!availableTiers.some((tier) => tier.name === "balanced")) {
-        setSelectedTier(availableTiers[0]?.name ?? "balanced");
-      }
-    } catch (reason: unknown) {
-      setTiers([]);
-      setTierError(
-        reason instanceof Error
-          ? reason.message
-          : "Model options are unavailable. Please try again shortly.",
-      );
-    } finally {
-      setIsTierLoading(false);
-    }
-  }, []);
-
-  const retryTiers = () => {
-    setIsTierLoading(true);
-    setTierError(null);
-    void loadTiers();
-  };
-
-  useEffect(() => {
-    let isCurrent = true;
-    void getTiers()
-      .then((availableTiers) => {
-        if (!isCurrent) {
-          return;
-        }
-        setTiers(availableTiers);
-        if (!availableTiers.some((tier) => tier.name === "balanced")) {
-          setSelectedTier(availableTiers[0]?.name ?? "balanced");
-        }
-      })
-      .catch((reason: unknown) => {
-        if (!isCurrent) {
-          return;
-        }
-        setTiers([]);
-        setTierError(
-          reason instanceof Error
-            ? reason.message
-            : "Model options are unavailable. Please try again shortly.",
-        );
-      })
-      .finally(() => {
-        if (isCurrent) {
-          setIsTierLoading(false);
-        }
-      });
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
-
   const runExtraction = async () => {
-    if (analysisMode === "extractor" && (isTierLoading || tiers.length === 0)) {
-      return;
-    }
     setExtractionError(null);
+    setModelProgress(0);
     setIsLoading(true);
     try {
-      setResult(await extractText(text, selectedTier, analysisMode));
+      setResult(await extractText(text, setModelProgress));
     } catch (reason: unknown) {
       setExtractionError(
         reason instanceof Error
@@ -151,6 +73,7 @@ export default function App() {
       );
     } finally {
       setIsLoading(false);
+      setModelProgress(null);
     }
   };
 
@@ -282,38 +205,21 @@ export default function App() {
             <TextInput
               value={text}
               isLoading={isLoading}
-              canExtract={
-                analysisMode === "document" ||
-                (!isTierLoading && tiers.length > 0)
-              }
+              canExtract
               onChange={setText}
               onSubmit={() => void runExtraction()}
             />
-            <AnalysisModeSelector
-              mode={analysisMode}
-              disabled={isLoading}
-              onChange={setAnalysisMode}
-            />
-            {analysisMode === "extractor" ? (
-              <TierSelector
-                tiers={tiers}
-                selectedTier={selectedTier}
-                disabled={isLoading || isTierLoading || tiers.length === 0}
-                isLoading={isTierLoading}
-                error={tierError}
-                onChange={setSelectedTier}
-                onRetry={retryTiers}
-              />
-            ) : (
-              <section className="local-model-note" aria-live="polite">
-                <p className="eyebrow">Private by design</p>
-                <strong>Document model runs inside this service.</strong>
-                <span>
-                  Your source stays on this server. TextMosaic makes no
-                  third-party AI or model API request.
-                </span>
-              </section>
-            )}
+            <section className="local-model-note" aria-live="polite">
+              <p className="eyebrow">Private by design</p>
+              <strong>Model runs inside your browser.</strong>
+              <span>
+                The ONNX model is bundled with this site. Your source text is
+                never uploaded or sent to an API.
+              </span>
+              {modelProgress !== null && modelProgress < 100 ? (
+                <span>Loading local model {modelProgress}%</span>
+              ) : null}
+            </section>
             {extractionError ? (
               <p className="error-message" role="alert">
                 {extractionError}
@@ -382,10 +288,10 @@ export default function App() {
           </article>
           <article className="mosaic-piece model-piece">
             <span>03</span>
-            <h3>Two local models. One explorable reading.</h3>
+            <h3>One on-device model. One explorable reading.</h3>
             <p>
-              Use the document model for broad passages or the self-trained
-              relation model for focused extractions.
+              The bundled ML model finds named entities; local graph rules turn
+              the evidence into an explorable relationship map.
             </p>
           </article>
         </div>
