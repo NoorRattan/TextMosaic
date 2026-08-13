@@ -10,6 +10,17 @@ import type { ExtractResponse } from "./types";
 const initialText =
   "Havana Radio Reloj Network broadcast the interview from Cuba.";
 const GraphView = lazy(() => import("./components/GraphView"));
+type Theme = "dark" | "light";
+
+function getInitialTheme(): Theme {
+  try {
+    return globalThis.localStorage?.getItem("textmosaic-theme") === "light"
+      ? "light"
+      : "dark";
+  } catch {
+    return "dark";
+  }
+}
 
 const reveal: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -25,6 +36,7 @@ const reveal: Variants = {
 };
 
 export default function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [text, setText] = useState(initialText);
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +70,16 @@ export default function App() {
     window.addEventListener("pointermove", updateCursor);
     return () => window.removeEventListener("pointermove", updateCursor);
   }, [cursorX, cursorY]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try {
+      globalThis.localStorage?.setItem("textmosaic-theme", theme);
+    } catch {
+      // Theme persistence is optional when browser storage is unavailable.
+    }
+  }, [theme]);
 
   const runExtraction = async () => {
     setExtractionError(null);
@@ -109,9 +131,29 @@ export default function App() {
             <span>TextMosaic</span>
           </a>
           <div className="masthead-note">Neural extraction / 01–06</div>
-          <a className="masthead-link" href="#studio">
-            Open the studio <span aria-hidden="true">↘</span>
-          </a>
+          <div className="masthead-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={
+                theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
+              aria-pressed={theme === "light"}
+              onClick={() =>
+                setTheme((currentTheme) =>
+                  currentTheme === "dark" ? "light" : "dark",
+                )
+              }
+            >
+              <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+              <span>{theme === "dark" ? "Light" : "Dark"}</span>
+            </button>
+            <a className="masthead-link" href="#studio">
+              Open the studio <span aria-hidden="true">↘</span>
+            </a>
+          </div>
         </nav>
 
         <div className="hero-copy" id="top">
