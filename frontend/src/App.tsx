@@ -296,7 +296,10 @@ export default function App() {
                 <span className="result-count">
                   {displayedConceptCount}{" "}
                   {result.graphRelations.length ? "linked" : ""} concepts /{" "}
-                  {result.graphRelations.length} relationships
+                  {result.graphRelations.length}{" "}
+                  {result.graphRelations.length === 1
+                    ? "relationship"
+                    : "relationships"}
                 </span>
               ) : (
                 <span className="result-count">Awaiting source text</span>

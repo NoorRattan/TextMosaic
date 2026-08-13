@@ -220,7 +220,11 @@ export default function GraphView({ result }: GraphViewProps) {
         )}
         <p className="graph-canvas-caption">
           <span>{graphData.nodes.length} extracted concepts</span>
-          <span>Drag to explore · click a concept for its evidence</span>
+          <span>
+            {graphData.links.length === 1
+              ? "Click a concept for its evidence"
+              : "Drag to explore · click a concept for its evidence"}
+          </span>
         </p>
       </div>
       <div className="map-inspector">
