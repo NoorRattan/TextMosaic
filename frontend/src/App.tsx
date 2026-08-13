@@ -42,6 +42,14 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [modelProgress, setModelProgress] = useState<number | null>(null);
+  const displayedConceptCount = result?.graphRelations.length
+    ? new Set(
+        result.graphRelations.flatMap((relation) => [
+          relation.source,
+          relation.target,
+        ]),
+      ).size
+    : (result?.concepts.length ?? 0);
   const [signal, setSignal] = useState({ x: 50, y: 45 });
   const cursorX = useMotionValue(-80);
   const cursorY = useMotionValue(-80);
@@ -286,7 +294,8 @@ export default function App() {
               </div>
               {result ? (
                 <span className="result-count">
-                  {result.concepts.length} concepts /{" "}
+                  {displayedConceptCount}{" "}
+                  {result.graphRelations.length ? "linked" : ""} concepts /{" "}
                   {result.graphRelations.length} relationships
                 </span>
               ) : (

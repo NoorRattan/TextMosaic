@@ -25,7 +25,8 @@ function createNodeLabel(node: GraphNode): Sprite {
   const context = canvas.getContext("2d");
   if (!context) return new Sprite();
 
-  const label = node.label.length > 28 ? `${node.label.slice(0, 26)}…` : node.label;
+  const label =
+    node.label.length > 28 ? `${node.label.slice(0, 26)}…` : node.label;
   context.font = '600 42px "DM Sans", sans-serif';
   const width = Math.max(250, Math.ceil(context.measureText(label).width + 76));
   canvas.width = width;
@@ -47,8 +48,8 @@ function createNodeLabel(node: GraphNode): Sprite {
   const sprite = new Sprite(
     new SpriteMaterial({ map: texture, transparent: true, depthWrite: false }),
   );
-  sprite.scale.set((width / 82) * 1.45, 1.45, 1);
-  sprite.position.set(0, 1.45, 0);
+  sprite.scale.set((width / 82) * 6.4, 6.4, 1);
+  sprite.position.set(0, 8.2, 0);
   return sprite;
 }
 
@@ -56,14 +57,20 @@ function toGraphData(result: ExtractResponse): {
   nodes: GraphNode[];
   links: GraphLink[];
 } {
-  const nodes = result.concepts.map((concept, index) => ({
+  const allNodes = result.concepts.map((concept, index) => ({
     ...concept,
     color: palette[index % palette.length],
   }));
-  const ids = new Set(nodes.map((node) => node.id));
+  const ids = new Set(allNodes.map((node) => node.id));
   const links = result.graphRelations.filter(
     (relation) => ids.has(relation.source) && ids.has(relation.target),
   );
+  const connectedIds = new Set(
+    links.flatMap((relation) => [relation.source, relation.target]),
+  );
+  const nodes = links.length
+    ? allNodes.filter((node) => connectedIds.has(node.id))
+    : allNodes;
   return { nodes, links };
 }
 
