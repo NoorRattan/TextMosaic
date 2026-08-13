@@ -1,5 +1,9 @@
-import { useMemo, useState } from "react";
-import ForceGraph3D from "react-force-graph-3d";
+import { useMemo, useRef, useState } from "react";
+import ForceGraph3D, {
+  type ForceGraphMethods,
+  type LinkObject,
+  type NodeObject,
+} from "react-force-graph-3d";
 import { CanvasTexture, Sprite, SpriteMaterial } from "three";
 
 import type { Concept, ExtractResponse, GraphRelation } from "../types";
@@ -100,6 +104,10 @@ function ConceptDetail({ concept }: { concept: GraphNode }) {
 
 export default function GraphView({ result }: GraphViewProps) {
   const graphData = useMemo(() => toGraphData(result), [result]);
+  const graphRef =
+    useRef<
+      ForceGraphMethods<NodeObject<object>, LinkObject<object, GraphLink>>
+    >(undefined);
   const nodeLabelObject = useMemo(
     () => (node: object) => createNodeLabel(node as GraphNode),
     [],
@@ -131,6 +139,7 @@ export default function GraphView({ result }: GraphViewProps) {
       </div>
       <div className="graph-canvas" aria-label="Interactive 3D concept graph">
         <ForceGraph3D
+          ref={graphRef}
           graphData={graphData}
           backgroundColor="#0B0F14"
           nodeLabel={(node) => {
@@ -147,6 +156,7 @@ export default function GraphView({ result }: GraphViewProps) {
           linkDirectionalArrowLength={3.5}
           linkDirectionalArrowRelPos={1}
           linkLabel={(link) => escapeHtml((link as GraphLink).label)}
+          onEngineStop={() => graphRef.current?.zoomToFit(420, 84)}
           showNavInfo={false}
         />
         <p className="graph-canvas-caption">
