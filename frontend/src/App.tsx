@@ -424,6 +424,13 @@ function ThemeGlyph({ theme }: { theme: Theme }) {
 function GraphPlaceholder({ message }: { message: string }) {
   return (
     <section className="graph-empty" aria-live="polite">
+      <div className="empty-constellation" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <i />
+        <i />
+      </div>
       <span className="empty-prompt-mark" aria-hidden="true">
         —
       </span>

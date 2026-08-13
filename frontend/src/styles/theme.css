@@ -366,24 +366,35 @@ a:focus-visible {
 }
 
 .studio-section {
+  padding-block: clamp(4.5rem, 8vw, 7.5rem);
   background: #f0e9dc;
 }
 .studio-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(17rem, 0.58fr);
+  column-gap: clamp(2rem, 8vw, 8rem);
+  align-items: end;
   width: min(78rem, 100%);
-  margin: 0 auto clamp(3rem, 7vw, 6rem);
+  margin: 0 auto clamp(2.5rem, 5vw, 4.5rem);
+}
+.studio-heading .section-number,
+.studio-heading h2 {
+  grid-column: 1;
 }
 .studio-heading h2 {
   max-width: 8ch;
 }
 .studio-heading > p:last-child {
-  max-width: 25rem;
-  margin: 1.8rem 0 0 33%;
+  grid-column: 2;
+  grid-row: 2;
+  max-width: 21rem;
+  margin: 0 0 0.45rem;
   color: #597068;
   line-height: 1.6;
 }
 .studio-layout {
   display: grid;
-  grid-template-columns: minmax(18rem, 0.64fr) minmax(0, 1.45fr);
+  grid-template-columns: minmax(19rem, 0.75fr) minmax(0, 1.25fr);
   gap: 1.2rem;
   width: min(82rem, 100%);
   margin: 0 auto;
@@ -631,7 +642,7 @@ button:disabled {
   font-size: 0.8rem;
 }
 .graph-panel {
-  min-height: 39rem;
+  min-height: 31rem;
   overflow: hidden;
   border-radius: 2rem 0.3rem 2rem 2rem;
   background: #14221f;
@@ -650,7 +661,9 @@ button:disabled {
   color: rgba(240, 233, 220, 0.56);
 }
 .graph-empty {
-  min-height: calc(39rem - 5.35rem);
+  position: relative;
+  isolation: isolate;
+  min-height: calc(31rem - 5.35rem);
 }
 .graph-empty {
   display: grid;
@@ -662,11 +675,72 @@ button:disabled {
   padding: 2rem;
 }
 .graph-empty p {
+  position: relative;
+  z-index: 1;
   max-width: 18rem;
   margin: 0;
   font-family: "Instrument Serif", serif;
   font-size: 1.35rem;
   line-height: 1.2;
+}
+.empty-prompt-mark {
+  position: relative;
+  z-index: 1;
+}
+.empty-constellation {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(23rem, 68%);
+  aspect-ratio: 1.6;
+  transform: translate(-50%, -50%);
+  opacity: 0.42;
+}
+.empty-constellation::before,
+.empty-constellation::after,
+.empty-constellation i::before {
+  position: absolute;
+  width: 42%;
+  height: 1px;
+  content: "";
+  background: currentColor;
+  opacity: 0.48;
+  transform-origin: left center;
+}
+.empty-constellation::before {
+  top: 28%;
+  left: 18%;
+  transform: rotate(28deg);
+}
+.empty-constellation::after {
+  top: 67%;
+  left: 40%;
+  transform: rotate(-31deg);
+}
+.empty-constellation i::before {
+  top: 55%;
+  left: 12%;
+  width: 30%;
+  transform: rotate(-36deg);
+}
+.empty-constellation span {
+  position: absolute;
+  width: 0.62rem;
+  height: 0.62rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: #14221f;
+}
+.empty-constellation span:nth-child(1) {
+  top: 18%;
+  left: 13%;
+}
+.empty-constellation span:nth-child(2) {
+  top: 49%;
+  left: 52%;
+}
+.empty-constellation span:nth-child(3) {
+  top: 33%;
+  right: 11%;
 }
 .knowledge-map {
   padding: 1rem;
@@ -921,25 +995,27 @@ button:disabled {
 }
 .mosaic-header {
   display: grid;
-  grid-template-columns: 0.65fr 1.35fr;
-  gap: 3rem;
+  gap: 1rem;
   width: min(78rem, 100%);
-  margin: 0 auto 3rem;
+  margin: 0 auto clamp(2rem, 4vw, 3.5rem);
+}
+.mosaic-header h2 {
+  max-width: 13ch;
 }
 .mosaic-header .section-number {
   color: #f1c6a3;
 }
 .mosaic-grid {
   display: grid;
-  grid-template-columns: 0.9fr 1.05fr 0.75fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  align-items: end;
+  align-items: stretch;
   width: min(78rem, 100%);
   margin: 0 auto;
 }
 .mosaic-piece {
   display: flex;
-  min-height: 19rem;
+  min-height: 23rem;
   flex-direction: column;
   justify-content: space-between;
   padding: 1.4rem;
@@ -956,12 +1032,10 @@ button:disabled {
   background: rgba(24, 49, 44, 0.25);
 }
 .relation-piece {
-  min-height: 27rem;
   border-radius: 0.3rem 1.5rem 1.5rem 1.5rem;
   background: #1e3a33;
 }
 .model-piece {
-  min-height: 22rem;
   border-radius: 1.5rem 1.5rem 1.5rem 0.3rem;
 }
 .mosaic-piece span {
@@ -1302,6 +1376,9 @@ html[data-theme="light"] .relation-list li small,
 html[data-theme="light"] .no-links {
   color: rgba(24, 49, 44, 0.67);
 }
+html[data-theme="light"] .empty-constellation span {
+  background: #eff5ef;
+}
 html[data-theme="light"] .analysis-notice {
   border-color: rgba(49, 95, 84, 0.3);
   background: rgba(49, 95, 84, 0.08);
@@ -1376,7 +1453,12 @@ html[data-theme="light"] .magnetic-link {
     grid-template-columns: 1fr;
   }
   .studio-heading > p:last-child {
+    grid-column: auto;
+    grid-row: auto;
     margin-left: 0;
+  }
+  .studio-heading {
+    grid-template-columns: 1fr;
   }
   .mosaic-piece,
   .relation-piece,
