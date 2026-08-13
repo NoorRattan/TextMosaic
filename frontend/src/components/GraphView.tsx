@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import ForceGraph3D from "react-force-graph-3d";
+import { CanvasTexture, Sprite, SpriteMaterial } from "three";
 
 import type { Concept, ExtractResponse, GraphRelation } from "../types";
 import { escapeHtml } from "./graphHtml";
@@ -18,6 +19,38 @@ interface GraphLink extends GraphRelation {
 }
 
 const palette = ["#2DD4BF", "#FBBF24", "#FB7185", "#A78BFA", "#60A5FA"];
+
+function createNodeLabel(node: GraphNode): Sprite {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) return new Sprite();
+
+  const label = node.label.length > 28 ? `${node.label.slice(0, 26)}…` : node.label;
+  context.font = '600 42px "DM Sans", sans-serif';
+  const width = Math.max(250, Math.ceil(context.measureText(label).width + 76));
+  canvas.width = width;
+  canvas.height = 82;
+
+  context.font = '600 42px "DM Sans", sans-serif';
+  context.fillStyle = "rgba(7, 19, 17, 0.92)";
+  context.strokeStyle = node.color;
+  context.lineWidth = 3;
+  context.beginPath();
+  context.roundRect(3, 3, width - 6, 76, 18);
+  context.fill();
+  context.stroke();
+  context.fillStyle = "#f3eddf";
+  context.fillText(label, 34, 53);
+
+  const texture = new CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  const sprite = new Sprite(
+    new SpriteMaterial({ map: texture, transparent: true, depthWrite: false }),
+  );
+  sprite.scale.set((width / 82) * 1.45, 1.45, 1);
+  sprite.position.set(0, 1.45, 0);
+  return sprite;
+}
 
 function toGraphData(result: ExtractResponse): {
   nodes: GraphNode[];
@@ -60,6 +93,10 @@ function ConceptDetail({ concept }: { concept: GraphNode }) {
 
 export default function GraphView({ result }: GraphViewProps) {
   const graphData = useMemo(() => toGraphData(result), [result]);
+  const nodeLabelObject = useMemo(
+    () => (node: object) => createNodeLabel(node as GraphNode),
+    [],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(
     graphData.nodes[0]?.id ?? null,
   );
@@ -95,6 +132,8 @@ export default function GraphView({ result }: GraphViewProps) {
           }}
           nodeColor={(node) => (node as GraphNode).color}
           nodeRelSize={5}
+          nodeThreeObject={nodeLabelObject}
+          nodeThreeObjectExtend
           onNodeClick={(node) => setSelectedId((node as GraphNode).id)}
           linkColor={() => "#FB7185"}
           linkWidth={1.8}
@@ -103,6 +142,10 @@ export default function GraphView({ result }: GraphViewProps) {
           linkLabel={(link) => escapeHtml((link as GraphLink).label)}
           showNavInfo={false}
         />
+        <p className="graph-canvas-caption">
+          <span>{graphData.nodes.length} extracted concepts</span>
+          <span>Drag to explore · click a concept for its evidence</span>
+        </p>
       </div>
       <div className="map-inspector">
         <section className="concept-list" aria-label="Concepts in this map">

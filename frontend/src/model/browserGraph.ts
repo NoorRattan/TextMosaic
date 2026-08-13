@@ -23,7 +23,7 @@ type NerPipeline = (
 ) => Promise<NerPrediction[]>;
 
 const RELATION_PATTERN =
-  /([A-Za-z][A-Za-z0-9,\- ]{2,90}?)\s+(increases?|decreases?|reduces?|causes?|prevents?|improves?|worsens?|accelerates?|elevates?|raises?|lowers?|affects?|supports?|enables?|produces?|drives?|contains?|uses?|includes?|requires?|creates?|announces?|acquires?|develops?)\s+([A-Za-z][A-Za-z0-9,\- ]{2,90}?)(?=(?:[.;]|,\s+(?:which|and|but)|\s+and\s+(?:it|they)\b|$))/gi;
+  /([A-Za-z][A-Za-z0-9,\- ]{2,90}?)\s+(increases?|decreases?|reduces?|causes?|prevents?|improves?|worsens?|accelerates?|elevates?|raises?|lowers?|affects?|supports?|enables?|produces?|drives?|contains?|uses?|includes?|requires?|creates?|announces?|acquires?|develops?|broadcasts?)\s+([A-Za-z][A-Za-z0-9,\- ]{2,90}?)(?=(?:[.;]|,\s+(?:which|and|but)|\s+and\s+(?:it|they)\b|$))/gi;
 
 const CHAINED_RELATION_PATTERN =
   /^(.*?)(?:\s+and\s+)(increases?|decreases?|reduces?|causes?|prevents?|improves?|worsens?|accelerates?|elevates?|raises?|lowers?|affects?|supports?|enables?|produces?|drives?)\s+(.+)$/i;

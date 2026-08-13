@@ -68,4 +68,21 @@ describe("composeKnowledgeMap", () => {
       "may",
     );
   });
+
+  it("recognises broadcast statements as source-grounded relationships", () => {
+    const source =
+      "Havana Radio Reloj Network broadcast the interview from Cuba.";
+    const result = composeKnowledgeMap(source, []);
+
+    expect(result.graphRelations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "havana-radio-reloj-network",
+          target: "interview",
+          label: "broadcast",
+          evidence: [{ quote: source }],
+        }),
+      ]),
+    );
+  });
 });
