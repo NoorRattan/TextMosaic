@@ -91,6 +91,10 @@ def create_app(
     app = FastAPI(title="TextMosaic", version="1.0.0", docs_url=None, redoc_url=None)
     origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
     hosts = [host.strip() for host in ALLOWED_HOSTS.split(",") if host.strip()]
+    # TestClient uses this host. Production creates the app without an injected
+    # service, so a local .env cannot accidentally widen the deployed allow-list.
+    if service is not None and "testserver" not in hosts:
+        hosts.append("testserver")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,

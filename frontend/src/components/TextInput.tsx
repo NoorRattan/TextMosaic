@@ -20,19 +20,21 @@ export function TextInput({
           <p className="eyebrow">Source text</p>
           <h2 id="input-heading">Compose a graph from real text</h2>
         </div>
-        <span className="character-count">{value.length} / 2,000</span>
+        <span className="character-count">
+          {value.length.toLocaleString()} / 12,000
+        </span>
       </div>
       <textarea
         aria-label="Text to extract"
         value={value}
-        maxLength={2_000}
+        maxLength={12_000}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Paste a short news sentence, biography, or company update…"
+        placeholder="Paste a research abstract, policy clause, report, or dense passage"
       />
       <div className="input-footer">
         <p>
-          The graph appears only after the self-trained model processes your
-          text.
+          Each map keeps its source evidence visible. The bundled model reads
+          your text locally; no third-party AI or model API is used.
         </p>
         <button
           type="button"
@@ -40,7 +42,7 @@ export function TextInput({
           onClick={onSubmit}
         >
           {isLoading
-            ? "Extracting…"
+            ? "Extracting..."
             : canExtract
               ? "Build knowledge graph"
               : "Model service unavailable"}

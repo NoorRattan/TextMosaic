@@ -63,7 +63,7 @@ except ValueError as error:
     raise ValueError("PORT must be an integer.") from error
 
 try:
-    MAX_REQUEST_BODY_BYTES: Final[int] = int(os.getenv("MAX_REQUEST_BODY_BYTES", "16384"))
+    MAX_REQUEST_BODY_BYTES: Final[int] = int(os.getenv("MAX_REQUEST_BODY_BYTES", "65536"))
 except ValueError as error:
     raise ValueError("MAX_REQUEST_BODY_BYTES must be an integer.") from error
 

@@ -32,8 +32,7 @@ jobs:
       - run: npm run build:pages
         working-directory: frontend
         env:
-          VITE_API_BASE_URL: ${{ vars.TEXTMOSAIC_API_BASE_URL || 'https://treck001-textmosaic-demo.hf.space/api' }}
-          VITE_API_TRANSPORT: ${{ vars.TEXTMOSAIC_API_TRANSPORT || 'gradio' }}
+          VITE_API_BASE_URL: ${{ vars.TEXTMOSAIC_API_BASE_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

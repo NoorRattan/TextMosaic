@@ -1,7 +1,7 @@
 export type EntityType = "Peop" | "Org" | "Loc" | "Other";
-export type RelationType =
-  "Located_In" | "Work_For" | "OrgBased_In" | "Live_In" | "Kill";
+export type RelationType = string;
 export type TierName = "speed" | "balanced" | "accuracy";
+export type AnalysisMode = "document" | "extractor";
 
 export interface Entity {
   type: EntityType;
@@ -15,10 +15,41 @@ export interface Relation {
   tail: number;
 }
 
+export interface Evidence {
+  quote: string;
+}
+
+export interface Concept {
+  id: string;
+  label: string;
+  kind: string;
+  explanation: string;
+  evidence: Evidence[];
+  confidence: number;
+}
+
+export interface GraphRelation {
+  source: string;
+  target: string;
+  label: string;
+  explanation: string;
+  evidence: Evidence[];
+  confidence: number;
+}
+
+export interface AnalysisMetadata {
+  mode: "document" | "extractor";
+  coverage: "document" | "targeted";
+  notice: string;
+}
+
 export interface ExtractResponse {
   tokens: string[];
   entities: Entity[];
   relations: Relation[];
+  concepts: Concept[];
+  graphRelations: GraphRelation[];
+  analysis: AnalysisMetadata;
 }
 
 export interface TierInfo {

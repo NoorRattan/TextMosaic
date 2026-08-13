@@ -8,42 +8,53 @@ afterEach(() => {
     .__TEXTMOSAIC_CONFIG__;
 });
 
-describe("toClientResponse", () => {
-  it("preserves the current one-word API schema at the fetch boundary", () => {
+describe("local model API client", () => {
+  it("preserves a documented local knowledge-map response", () => {
     expect(
       toClientResponse({
-        tokens: ["Ada"],
-        entities: [{ type: "Peop", start: 0, end: 1 }],
+        tokens: [],
+        entities: [],
         relations: [],
+        concepts: [
+          {
+            id: "concept-1",
+            label: "Ada",
+            kind: "person",
+            explanation: "Ada is a person in the source.",
+            evidence: [{ quote: "Ada" }],
+            confidence: 0.82,
+          },
+        ],
+        graph_relations: [],
+        analysis: {
+          mode: "document",
+          coverage: "document",
+          notice: "Built locally.",
+        },
       }),
-    ).toEqual({
-      tokens: ["Ada"],
-      entities: [{ type: "Peop", start: 0, end: 1 }],
-      relations: [],
+    ).toMatchObject({
+      concepts: [{ label: "Ada", evidence: [{ quote: "Ada" }] }],
+      analysis: { mode: "document", coverage: "document" },
     });
   });
 
-  it("loads the live model tier contract through the API boundary", async () => {
+  it("loads local relation-model tiers through the REST boundary", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          tiers: [
-            { name: "speed", description: "Fastest" },
-            { name: "balanced", description: "Default" },
-            { name: "accuracy", description: "Strongest" },
-          ],
+          tiers: [{ name: "balanced", description: "Default" }],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
       ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getTiers()).resolves.toEqual([
-      { name: "speed", description: "Fastest" },
       { name: "balanced", description: "Default" },
-      { name: "accuracy", description: "Strongest" },
     ]);
-    expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:7860/tiers",
       expect.objectContaining({
@@ -52,29 +63,50 @@ describe("toClientResponse", () => {
     );
   });
 
-  it("uses runtime container configuration instead of a compile-time API URL", async () => {
+  it("uses runtime configuration and sends the requested local analysis mode", async () => {
     (
       globalThis as typeof globalThis & {
         __TEXTMOSAIC_CONFIG__?: { apiBaseUrl: string };
       }
-    ).__TEXTMOSAIC_CONFIG__ = { apiBaseUrl: "https://api.example.test/" };
+    ).__TEXTMOSAIC_CONFIG__ = { apiBaseUrl: "https://models.example.test/" };
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ tiers: [] }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+      new Response(
+        JSON.stringify({
+          tokens: [],
+          entities: [],
+          relations: [],
+          concepts: [],
+          graph_relations: [],
+          analysis: {
+            mode: "document",
+            coverage: "document",
+            notice: "Built locally.",
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await getTiers();
-
+    await expect(
+      extractText("A dense source.", "balanced", "document"),
+    ).resolves.toMatchObject({
+      analysis: { mode: "document" },
+    });
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/tiers",
-      expect.any(Object),
+      "https://models.example.test/extract",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          text: "A dense source.",
+          tier: "balanced",
+          mode: "document",
+        }),
+      }),
     );
   });
 
-  it("turns an HTML fallback response into an actionable service error", async () => {
+  it("rejects an HTML response instead of treating it as model data", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -86,108 +118,7 @@ describe("toClientResponse", () => {
     );
 
     await expect(getTiers()).rejects.toThrow(
-      "The extraction service is unavailable.",
-    );
-  });
-
-  it("uses the deployed Gradio queue contract for tiers and extraction", async () => {
-    (
-      globalThis as typeof globalThis & {
-        __TEXTMOSAIC_CONFIG__?: {
-          apiBaseUrl: string;
-          apiTransport: "gradio";
-        };
-      }
-    ).__TEXTMOSAIC_CONFIG__ = {
-      apiBaseUrl: "https://demo.example.test/api",
-      apiTransport: "gradio",
-    };
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            named_endpoints: {
-              "/extract": {
-                parameters: [
-                  {
-                    parameter_name: "tier",
-                    type: { enum: ["speed", "balanced", "accuracy"] },
-                  },
-                ],
-              },
-            },
-          }),
-          { headers: { "Content-Type": "application/json" } },
-        ),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ event_id: "event-123" }), {
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          'event: complete\ndata: [{"tokens":["Ada"],"entities":[],"relations":[]}]\n\n',
-          { headers: { "Content-Type": "text/event-stream" } },
-        ),
-      );
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(getTiers()).resolves.toHaveLength(3);
-    await expect(extractText("Ada", "balanced")).resolves.toEqual({
-      tokens: ["Ada"],
-      entities: [],
-      relations: [],
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "https://demo.example.test/gradio_api/info",
-      expect.any(Object),
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "https://demo.example.test/gradio_api/call/v2/extract",
-      expect.objectContaining({ method: "POST" }),
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
-      "https://demo.example.test/gradio_api/call/extract/event-123",
-      expect.any(Object),
-    );
-  });
-
-  it("preserves a useful Gradio queue error for the product UI", async () => {
-    (
-      globalThis as typeof globalThis & {
-        __TEXTMOSAIC_CONFIG__?: {
-          apiBaseUrl: string;
-          apiTransport: "gradio";
-        };
-      }
-    ).__TEXTMOSAIC_CONFIG__ = {
-      apiBaseUrl: "https://demo.example.test/api",
-      apiTransport: "gradio",
-    };
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ event_id: "event-456" }), {
-            headers: { "Content-Type": "application/json" },
-          }),
-        )
-        .mockResolvedValueOnce(
-          new Response(
-            'event: error\ndata: {"error":"ZeroGPU quota exceeded"}\n\n',
-            { headers: { "Content-Type": "text/event-stream" } },
-          ),
-        ),
-    );
-
-    await expect(extractText("Ada", "balanced")).rejects.toThrow(
-      "ZeroGPU quota exceeded",
+      "The local model service is unavailable.",
     );
   });
 });

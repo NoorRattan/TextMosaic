@@ -10,28 +10,25 @@ pinned: false
 
 # TextMosaic
 
-TextMosaic turns text into an interactive 3D knowledge graph. Its named-entity and relation models are trained from random initialization on CoNLL04; inference never calls a hosted language model or loads pretrained language weights.
+TextMosaic turns dense text into an interactive, evidence-grounded knowledge map. Every concept can be opened for a plain-English explanation and an exact supporting quotation; every relationship stays directed and readable. It runs entirely on local model weights: a bundled document language model for broad passages and a self-trained CoNLL04 relation model for focused news-style extraction. It makes no third-party API calls and never sends source text to a third party.
 
 ## Start here — no technical knowledge needed
 
 **[Open the TextMosaic product](https://noorrattan.github.io/TextMosaic/)**, type a sentence, choose a model tier, and press **Build knowledge graph**. You will see:
 
-1. the words the model read;
-2. the people, organizations, places, and other entities it found; and
-3. the relationships it predicted between those entities.
+1. the concepts the map found;
+2. a plain-English explanation and source quotation for each selected concept; and
+3. the directed, labeled relationships supported by the text.
 
 The product interface is the intended place to explore the interactive 3D
-graph. It connects to the real `speed`, `balanced`, and `accuracy` checkpoints
-hosted on Hugging Face ZeroGPU. A short wait for a GPU is normal on the free
-model service; it is not a broken connection.
-
-Want only the raw entities and relations? Use the
-[direct model demo](https://treck001-textmosaic-demo.hf.space) instead.
+graph. **Document model** handles research abstracts, clauses, reports, and
+multi-sentence passages using the bundled local language model. **Relation
+model** uses the self-trained CoNLL-style entity/relation checkpoint when a
+focused news-style extraction is more useful. Both paths run locally.
 
 | Link | What it is for |
 |---|---|
 | [Open TextMosaic](https://noorrattan.github.io/TextMosaic/) | The finished product: write text, run a model, and explore its 3D knowledge graph. |
-| [Direct model demo](https://treck001-textmosaic-demo.hf.space) | A compact extraction interface for entities, relations, and raw JSON. |
 | [Source code](https://github.com/NoorRattan/TextMosaic) | The React frontend, FastAPI service, checkpoints, and deployment files. |
 | [Automated checks](https://github.com/NoorRattan/TextMosaic/actions) | Builds, tests, and the full container smoke test run for every push to `main`. |
 
@@ -133,23 +130,30 @@ set these **GitHub repository variables** before deploying Pages:
 
 ```text
 TEXTMOSAIC_API_BASE_URL=https://YOUR-DOCKER-SPACE.hf.space/api
-TEXTMOSAIC_API_TRANSPORT=rest
 TEXTMOSAIC_PUBLIC_API_ORIGIN=https://YOUR-DOCKER-SPACE.hf.space
 ```
 
-The Pages workflow then smoke-tests both the public page and the API. The
-legacy Gradio demo remains the fallback only while these variables are absent;
-do not treat it as the deployment of this repository's Docker application.
+The Pages workflow then smoke-tests both the public page and the local-model
+API. If these variables are absent, the page deliberately shows a configuration
+error rather than sending source text to a fallback service.
 
 ## API
 
-`POST /extract` accepts text and an optional tier. `GET /tiers` reads the available tiers from the backend configuration, and `GET /health` is a minimal liveness endpoint.
+`POST /extract` accepts text, an optional tier, and a local mode (`document` or
+`extractor`). `document` is the default and uses the bundled local language
+model; `extractor` uses the self-trained relation checkpoint. `GET /tiers`
+reads the available extractor tiers, and `GET /health` is a minimal liveness
+endpoint.
 
 ```json
-{"text":"Ada joined Acme.","tier":"balanced"}
+{"text":"Ada joined Acme.","tier":"balanced","mode":"document"}
 ```
 
-The response uses the CoNLL04-aligned `tokens`, `entities`, and `relations` fields. Entity spans are token-indexed and end-exclusive; relation heads and tails index the returned entities array.
+The response retains the CoNLL04-aligned `tokens`, `entities`, and `relations`
+fields. Entity spans are token-indexed and end-exclusive; relation heads and
+tails index the returned entities array. It also adds `concepts`,
+`graph_relations`, and `analysis`; all graph items include verbatim source
+evidence for the interface to display.
 
 ## Validation snapshot
 

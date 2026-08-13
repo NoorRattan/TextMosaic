@@ -11,9 +11,15 @@ import {
 
 import { extractText, getTiers } from "./api/client";
 import { GraphErrorBoundary } from "./components/GraphErrorBoundary";
+import { AnalysisModeSelector } from "./components/AnalysisModeSelector";
 import { TextInput } from "./components/TextInput";
 import { TierSelector } from "./components/TierSelector";
-import type { ExtractResponse, TierInfo, TierName } from "./types";
+import type {
+  AnalysisMode,
+  ExtractResponse,
+  TierInfo,
+  TierName,
+} from "./types";
 
 const initialText =
   "Havana Radio Reloj Network broadcast the interview from Cuba.";
@@ -36,6 +42,7 @@ export default function App() {
   const [text, setText] = useState(initialText);
   const [tiers, setTiers] = useState<TierInfo[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierName>("balanced");
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("document");
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTierLoading, setIsTierLoading] = useState(true);
@@ -129,13 +136,13 @@ export default function App() {
   }, []);
 
   const runExtraction = async () => {
-    if (isTierLoading || tiers.length === 0) {
+    if (analysisMode === "extractor" && (isTierLoading || tiers.length === 0)) {
       return;
     }
     setExtractionError(null);
     setIsLoading(true);
     try {
-      setResult(await extractText(text, selectedTier));
+      setResult(await extractText(text, selectedTier, analysisMode));
     } catch (reason: unknown) {
       setExtractionError(
         reason instanceof Error
@@ -192,7 +199,7 @@ export default function App() {
             animate="visible"
             variants={reveal}
           >
-            From a sentence to a system of meaning
+            From dense text to a system of meaning
           </motion.p>
           <h1>
             {["Make", "language", "legible."].map((word, index) => (
@@ -215,15 +222,14 @@ export default function App() {
             animate="visible"
             variants={reveal}
           >
-            TextMosaic turns raw language into a living field of entities and
-            directed relationships—using a model trained from scratch, in the
-            open.
+            TextMosaic turns raw language into an evidence-grounded field of
+            concepts and directed relationships, with the source still in view.
           </motion.p>
         </div>
 
         <div className="hero-index" aria-label="Product characteristics">
-          <span>01 / self-trained</span>
-          <span>02 / token grounded</span>
+          <span>01 / evidence grounded</span>
+          <span>02 / plain language</span>
           <span>03 / graph native</span>
         </div>
         <div className="signal-orbit" aria-hidden="true">
@@ -276,19 +282,38 @@ export default function App() {
             <TextInput
               value={text}
               isLoading={isLoading}
-              canExtract={!isTierLoading && tiers.length > 0}
+              canExtract={
+                analysisMode === "document" ||
+                (!isTierLoading && tiers.length > 0)
+              }
               onChange={setText}
               onSubmit={() => void runExtraction()}
             />
-            <TierSelector
-              tiers={tiers}
-              selectedTier={selectedTier}
-              disabled={isLoading || isTierLoading || tiers.length === 0}
-              isLoading={isTierLoading}
-              error={tierError}
-              onChange={setSelectedTier}
-              onRetry={retryTiers}
+            <AnalysisModeSelector
+              mode={analysisMode}
+              disabled={isLoading}
+              onChange={setAnalysisMode}
             />
+            {analysisMode === "extractor" ? (
+              <TierSelector
+                tiers={tiers}
+                selectedTier={selectedTier}
+                disabled={isLoading || isTierLoading || tiers.length === 0}
+                isLoading={isTierLoading}
+                error={tierError}
+                onChange={setSelectedTier}
+                onRetry={retryTiers}
+              />
+            ) : (
+              <section className="local-model-note" aria-live="polite">
+                <p className="eyebrow">Private by design</p>
+                <strong>Document model runs inside this service.</strong>
+                <span>
+                  Your source stays on this server. TextMosaic makes no
+                  third-party AI or model API request.
+                </span>
+              </section>
+            )}
             {extractionError ? (
               <p className="error-message" role="alert">
                 {extractionError}
@@ -299,12 +324,12 @@ export default function App() {
             <div className="graph-header">
               <div>
                 <p className="kicker">Live relationship field</p>
-                <h2 id="graph-heading">The model’s reading</h2>
+                <h2 id="graph-heading">The map’s reasoning</h2>
               </div>
               {result ? (
                 <span className="result-count">
-                  {result.entities.length} entities / {result.relations.length}{" "}
-                  links
+                  {result.concepts.length} concepts /{" "}
+                  {result.graphRelations.length} relationships
                 </span>
               ) : (
                 <span className="result-count">Awaiting source text</span>
@@ -324,8 +349,8 @@ export default function App() {
               <GraphPlaceholder
                 message={
                   isLoading
-                    ? "Tracing entities through the sentence…"
-                    : "A real extraction will appear here—nothing is pre-rendered."
+                    ? "Tracing concepts, evidence, and relationships through the source…"
+                    : "A source-grounded knowledge map will appear here."
                 }
               />
             )}
@@ -357,10 +382,10 @@ export default function App() {
           </article>
           <article className="mosaic-piece model-piece">
             <span>03</span>
-            <h3>Three weights. One shared language.</h3>
+            <h3>Two local models. One explorable reading.</h3>
             <p>
-              Choose speed, balance, or accuracy without changing the public
-              contract.
+              Use the document model for broad passages or the self-trained
+              relation model for focused extractions.
             </p>
           </article>
         </div>
@@ -369,13 +394,13 @@ export default function App() {
       <section className="evidence-ribbon" aria-label="TextMosaic evidence">
         <div className="ribbon-track">
           {[
-            "CoNLL04 trained",
-            "zero pretrained weights",
+            "fully local inference",
+            "no third-party API",
             "directed relations",
             "interactive 3D graph",
-            "token-level evidence",
-            "CoNLL04 trained",
-            "zero pretrained weights",
+            "verbatim evidence",
+            "fully local inference",
+            "no third-party API",
             "directed relations",
           ].map((item, index) => (
             <span key={`${item}-${index}`}>
@@ -386,11 +411,12 @@ export default function App() {
       </section>
 
       <section className="closing-section" aria-labelledby="closing-title">
-        <p className="section-number">D / Begin with the sentence</p>
+        <p className="section-number">D / Begin with the source</p>
         <h2 id="closing-title">Find the shape inside the statement.</h2>
         <MagneticLink />
         <p className="closing-note">
-          No hosted language model. No invented graph. Just the model’s reading.
+          No decorative graph. Every concept and link is traceable back to your
+          source.
         </p>
       </section>
     </main>

@@ -41,9 +41,27 @@ def test_extract_accepts_each_tier_and_returns_source_schema() -> None:
     client = TestClient(create_app(FakeExtractionService()))
 
     for tier in ("speed", "balanced", "accuracy"):
-        response = client.post("/extract", json={"text": "Ada joined Acme.", "tier": tier})
+        response = client.post(
+            "/extract",
+            json={"text": "Ada joined Acme.", "tier": tier, "mode": "extractor"},
+        )
         assert response.status_code == 200
         assert response.json()["relations"] == [{"type": "Work_For", "head": 0, "tail": 1}]
+
+
+def test_document_mode_returns_a_local_evidence_grounded_map() -> None:
+    client = TestClient(create_app(FakeExtractionService()))
+    source = "A magnetic field exerts a force on moving charged particles."
+
+    response = client.post("/extract", json={"text": source, "mode": "document"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["analysis"]["mode"] == "document"
+    assert body["analysis"]["coverage"] == "document"
+    assert body["concepts"]
+    assert all(item["evidence"][0]["quote"] in source for item in body["concepts"])
+    assert all(item["evidence"][0]["quote"] in source for item in body["graph_relations"])
 
 
 def test_extract_returns_a_stable_validation_error() -> None:
@@ -51,7 +69,7 @@ def test_extract_returns_a_stable_validation_error() -> None:
 
     empty = client.post("/extract", json={"text": "   "})
     invalid_tier = client.post("/extract", json={"text": "Ada joined Acme.", "tier": "slow"})
-    too_long = client.post("/extract", json={"text": "a" * 2_001})
+    too_long = client.post("/extract", json={"text": "a" * 12_001})
 
     for response in (empty, invalid_tier, too_long):
         assert response.status_code == 422
@@ -61,7 +79,7 @@ def test_extract_returns_a_stable_validation_error() -> None:
 def test_extract_rejects_an_oversized_request_before_processing() -> None:
     client = TestClient(create_app(FakeExtractionService()))
 
-    response = client.post("/extract", json={"text": "a" * 20_000})
+    response = client.post("/extract", json={"text": "a" * 70_000})
 
     assert response.status_code == 413
     assert response.json() == {
@@ -74,7 +92,7 @@ def test_extract_rejects_an_oversized_request_before_processing() -> None:
 
 def test_extract_rejects_an_oversized_chunked_request_before_body_buffering() -> None:
     app = create_app(FakeExtractionService())
-    payload = json.dumps({"text": "a" * 20_000}).encode()
+    payload = json.dumps({"text": "a" * 70_000}).encode()
     request_messages = iter(
         [
             {"type": "http.request", "body": payload[:10_000], "more_body": True},
@@ -155,19 +173,19 @@ def test_rate_limiter_uses_the_forwarded_visitor_address_behind_nginx() -> None:
     for _ in range(30):
         response = client.post(
             "/extract",
-            json={"text": "Ada joined Acme."},
+            json={"text": "Ada joined Acme.", "mode": "extractor"},
             headers=first_visitor,
         )
         assert response.status_code == 200
 
     first_blocked = client.post(
         "/extract",
-        json={"text": "Ada joined Acme."},
+        json={"text": "Ada joined Acme.", "mode": "extractor"},
         headers=first_visitor,
     )
     second_allowed = client.post(
         "/extract",
-        json={"text": "Ada joined Acme."},
+        json={"text": "Ada joined Acme.", "mode": "extractor"},
         headers=second_visitor,
     )
 
