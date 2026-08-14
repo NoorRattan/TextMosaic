@@ -64,6 +64,23 @@ GitHub Pages request path. A genuinely broad self-trained relation model would
 require a licensed, labelled multi-domain corpus and measured evaluation before
 the product could honestly claim that coverage.
 
+## CoNLL04 prototype validation scores
+
+These are the metrics stored in the three local checkpoint files after
+training with seed `29` for up to 30 CPU epochs. They are validation scores for
+the news-style CoNLL04 prototype—not benchmark results for the browser model,
+and not evidence of medical, legal, research, physics, or job-text coverage.
+
+| Tier | Best epoch | NER F1 | Relation F1 with gold entity spans | End-to-end relation F1 with predicted entity spans |
+| --- | ---: | ---: | ---: | ---: |
+| speed | 14 | 59.8% | 50.9% | 35.1% |
+| balanced | 23 | 61.3% | 52.3% | 39.4% |
+| accuracy | 24 | 66.8% | 52.0% | 38.2% |
+
+The gold-span relation score measures only relation classification when the
+correct entity boundaries are supplied. The end-to-end score is the more
+realistic pipeline measure because it includes entity detection errors.
+
 ## Verification
 
 ```powershell
