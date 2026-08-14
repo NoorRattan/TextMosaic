@@ -47,6 +47,7 @@ class _Candidate:
     end: int
     root: Token
     label: str
+    quote: str
     kind: str
     priority: int
 
@@ -82,6 +83,11 @@ def _key(value: str) -> str:
 
 def _compact_quote(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()[:500]
+
+
+def _source_quote(value: str) -> str:
+    """Keep an exact, schema-bounded substring instead of normalising evidence."""
+    return value[:500]
 
 
 class LocalDocumentGraphExtractor:
@@ -130,6 +136,7 @@ class LocalDocumentGraphExtractor:
                         entity.end_char,
                         entity.root,
                         label,
+                        _source_quote(entity.text),
                         _ENTITY_KINDS.get(entity.label_, entity.label_.replace("_", " ").lower()),
                         3,
                     )
@@ -154,6 +161,7 @@ class LocalDocumentGraphExtractor:
                     chunk.end_char,
                     chunk.root,
                     label,
+                    _source_quote(chunk.text[leading.end() :] if leading is not None else chunk.text),
                     "concept" if chunk.root.pos_ == "NOUN" else "named concept",
                     1,
                 )
@@ -184,7 +192,7 @@ class LocalDocumentGraphExtractor:
                 label=candidate.label,
                 kind=candidate.kind,
                 explanation=f"{candidate.label} is {article} {candidate.kind} identified by the local language model.",
-                evidence=[Evidence(quote=candidate.label)],
+                evidence=[Evidence(quote=candidate.quote)],
                 confidence=0.82 if candidate.priority == 3 else 0.66,
             )
             concepts.append(concept)
@@ -201,9 +209,7 @@ class LocalDocumentGraphExtractor:
         seen: set[tuple[str, str, str]] = set()
         for sentence in doc.sents:
             in_sentence = [
-                item
-                for item in candidates
-                if sentence.start_char <= item.start and item.end <= sentence.end_char
+                item for item in candidates if sentence.start_char <= item.start and item.end <= sentence.end_char
             ]
             if len(in_sentence) < 2:
                 continue
@@ -230,7 +236,7 @@ class LocalDocumentGraphExtractor:
                         if relation_key in seen:
                             continue
                         seen.add(relation_key)
-                        quote = _compact_quote(sentence.text)
+                        quote = _source_quote(sentence.text)
                         relationships.append(
                             GraphRelation(
                                 source=source.id,

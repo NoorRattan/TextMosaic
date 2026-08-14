@@ -205,8 +205,9 @@ export default function App() {
             animate="visible"
             variants={reveal}
           >
-            TextMosaic turns raw language into an evidence-grounded field of
-            concepts and directed relationships, with the source still in view.
+            Paste a dense research, policy, medical, physics, or job passage.
+            TextMosaic maps the explicit concepts and relationships it can
+            quote, with the source still in view.
           </motion.p>
         </div>
 
@@ -257,7 +258,8 @@ export default function App() {
           <p className="section-number">B / The extraction studio</p>
           <h2 id="studio-title">Feed the model a thought.</h2>
           <p>
-            It will return the relationships it can justify from the tokens.
+            It returns only relationships it can support with a source quote —
+            not a generated summary.
           </p>
         </div>
         <div className="studio-layout">
@@ -273,8 +275,9 @@ export default function App() {
               <p className="eyebrow">Private by design</p>
               <strong>Model runs inside your browser.</strong>
               <span>
-                The ONNX model is bundled with this site. Your source text is
-                never uploaded or sent to an API.
+                The bundled ONNX model identifies named entities; local rules
+                map explicit statements. Your text is never uploaded or sent to
+                an API.
               </span>
               {modelProgress !== null && modelProgress < 100 ? (
                 <span>Loading local model {modelProgress}%</span>
@@ -339,7 +342,7 @@ export default function App() {
             <h3>Tokens remain the ground truth.</h3>
             <p>
               Each entity is anchored to an end-exclusive span in your source
-              text.
+              text. Direct-statement nodes identify their exact source phrase.
             </p>
           </article>
           <article className="mosaic-piece relation-piece">
@@ -354,8 +357,8 @@ export default function App() {
             <span>03</span>
             <h3>One on-device model. One explorable reading.</h3>
             <p>
-              The bundled ML model finds named entities; local graph rules turn
-              the evidence into an explorable relationship map.
+              The bundled ML model finds named entities; deterministic local
+              rules map only explicit, quoted relationships.
             </p>
           </article>
         </div>

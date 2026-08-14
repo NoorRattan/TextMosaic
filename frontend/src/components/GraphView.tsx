@@ -78,10 +78,10 @@ function toGraphData(result: ExtractResponse): {
   return { nodes, links };
 }
 
-function modelSignalLabel(confidence: number): string {
-  if (confidence >= 0.8) return "named-entity signal";
-  if (confidence >= 0.55) return "local graph signal";
-  return "local relationship signal";
+function modelSignalLabel(concept: GraphNode): string {
+  return concept.origin === "model"
+    ? "on-device named-entity model"
+    : "source-grounded relationship rule";
 }
 
 function ConceptDetail({ concept }: { concept: GraphNode }) {
@@ -94,9 +94,7 @@ function ConceptDetail({ concept }: { concept: GraphNode }) {
       <p className="detail-kicker">Selected concept / {concept.kind}</p>
       <h3>{concept.label}</h3>
       <p className="detail-explanation">{concept.explanation}</p>
-      <span className="confidence-chip">
-        {modelSignalLabel(concept.confidence)}
-      </span>
+      <span className="confidence-chip">{modelSignalLabel(concept)}</span>
       <blockquote>{concept.evidence[0]?.quote}</blockquote>
     </aside>
   );
@@ -183,7 +181,7 @@ export default function GraphView({ result }: GraphViewProps) {
       <div className="analysis-notice" data-coverage={result.analysis.coverage}>
         <span>
           {result.analysis.mode === "document"
-            ? "Local document map"
+            ? "On-device source map"
             : "Focused relation map"}
         </span>
         <p>{result.analysis.notice}</p>
@@ -288,8 +286,8 @@ export default function GraphView({ result }: GraphViewProps) {
           </ul>
         ) : (
           <p className="no-links">
-            No directly supported relationships were found between these
-            concepts.
+            No explicit relationship was found. TextMosaic does not infer a link
+            that the source does not state.
           </p>
         )}
       </section>

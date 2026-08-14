@@ -85,4 +85,41 @@ describe("composeKnowledgeMap", () => {
       ]),
     );
   });
+
+  it("maps explicit medical, physics, legal, and job statements without inventing evidence", () => {
+    const source =
+      "Chronic inflammation increases cardiovascular risk. A magnetic field exerts a force on moving charged particles. The policy applies to all employees. The role requires Python experience.";
+    const result = composeKnowledgeMap(source, []);
+
+    expect(result.graphRelations.map((relation) => relation.label)).toEqual(
+      expect.arrayContaining(["increase", "exert", "apply to", "require"]),
+    );
+    for (const relation of result.graphRelations) {
+      expect(source).toContain(relation.evidence[0]?.quote);
+    }
+    for (const concept of result.concepts) {
+      expect(source).toContain(concept.evidence[0]?.quote);
+      expect(["model", "rule"]).toContain(concept.origin);
+    }
+  });
+
+  it("labels NER predictions as model-derived and direct statements as rule-derived", () => {
+    const source = "Acme Labs supports research.";
+    const result = composeKnowledgeMap(source, [
+      {
+        entity_group: "ORG",
+        word: "Acme Labs",
+        start: 0,
+        end: 9,
+        score: 0.93,
+      },
+    ]);
+
+    expect(result.concepts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Acme Labs", origin: "model" }),
+        expect.objectContaining({ label: "research", origin: "rule" }),
+      ]),
+    );
+  });
 });

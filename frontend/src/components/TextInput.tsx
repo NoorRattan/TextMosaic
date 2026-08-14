@@ -33,8 +33,9 @@ export function TextInput({
       />
       <div className="input-footer">
         <p>
-          Each map keeps its source evidence visible. The bundled model reads
-          your text inside this browser; no server or model API is used.
+          Each map keeps its source evidence visible. The local model and
+          deterministic graph rules run in this browser; no server or model API
+          is used.
         </p>
         <button
           type="button"

@@ -27,6 +27,7 @@ def test_document_model_maps_a_dense_cross_domain_sentence_locally() -> None:
     assert graph.analysis.mode == "document"
     assert graph.analysis.coverage == "document"
     assert all(concept.evidence[0].quote in source for concept in graph.concepts)
+    assert all(relation.evidence[0].quote == source for relation in graph.relations)
 
 
 def test_document_model_does_not_call_an_external_service() -> None:

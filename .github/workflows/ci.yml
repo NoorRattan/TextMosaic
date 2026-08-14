@@ -49,6 +49,8 @@ jobs:
       - run: npm run format
       - run: npm run test
       - run: npm run build
+      - run: npm exec playwright install --with-deps chromium
+      - run: npm run test:e2e
       - run: docker build --file Dockerfile --tag textmosaic-frontend-ci .
 
   huggingface-space:

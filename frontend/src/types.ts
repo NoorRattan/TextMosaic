@@ -21,6 +21,7 @@ export interface Concept {
   id: string;
   label: string;
   kind: string;
+  origin: "model" | "rule";
   explanation: string;
   evidence: Evidence[];
   confidence: number;

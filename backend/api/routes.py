@@ -74,10 +74,14 @@ def _extractor_map(result: dict[str, object]) -> tuple[list[Concept], list[Graph
     entities = result.get("entities")
     relations = result.get("relations")
     if not isinstance(tokens, list) or not isinstance(entities, list) or not isinstance(relations, list):
-        return [], [], AnalysisMetadata(
-            mode="extractor",
-            coverage="targeted",
-            notice="The local extractor could not build a source-grounded map for this text.",
+        return (
+            [],
+            [],
+            AnalysisMetadata(
+                mode="extractor",
+                coverage="targeted",
+                notice="The local extractor could not build a source-grounded map for this text.",
+            ),
         )
     concepts: list[Concept] = []
     for index, raw_entity in enumerate(entities):
@@ -136,12 +140,16 @@ def _extractor_map(result: dict[str, object]) -> tuple[list[Concept], list[Graph
                 confidence=0.5,
             )
         )
-    return concepts, graph_relations, AnalysisMetadata(
-        mode="extractor",
-        coverage="targeted",
-        notice=(
-            "Local extraction is limited to people, organizations, locations, and a small set of "
-            "news-style relations. Use the local document model for broad text maps."
+    return (
+        concepts,
+        graph_relations,
+        AnalysisMetadata(
+            mode="extractor",
+            coverage="targeted",
+            notice=(
+                "Local extraction is limited to people, organizations, locations, and a small set of "
+                "news-style relations. Use the local document model for broad text maps."
+            ),
         ),
     )
 
@@ -220,12 +228,14 @@ def create_router(
                 )
             result = extraction_service.extract(payload.text, payload.tier or MODEL_TIER_DEFAULT)
             concepts, graph_relations, analysis = _extractor_map(result)
-            return ExtractResponse.model_validate({
-                **result,
-                "concepts": concepts,
-                "graph_relations": graph_relations,
-                "analysis": analysis,
-            })
+            return ExtractResponse.model_validate(
+                {
+                    **result,
+                    "concepts": concepts,
+                    "graph_relations": graph_relations,
+                    "analysis": analysis,
+                }
+            )
         except LocalModelUnavailableError as error:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
