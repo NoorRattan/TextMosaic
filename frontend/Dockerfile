@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM nginx:stable-alpine
 
 RUN mkdir -p /var/cache/nginx /var/run/nginx \
     && chown -R nginx:nginx /var/cache/nginx /var/run/nginx /usr/share/nginx/html
